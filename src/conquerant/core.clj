@@ -1,24 +1,24 @@
 (ns conquerant.core
-  (:refer-clojure :exclude [await promise])
+  (:refer-clojure :exclude [await])
   (:require [clojure.walk :refer [prewalk-replace]]
-            [promesa.core :as p]))
+            [conquerant.internals :as ci]))
 
 (defn- async-fn [fn]
   (for [[argv & body] (rest fn)]
-    (list argv (cons `p/do* body))))
+    (list argv (cons `ci/ado body))))
 
 (defmacro async [expr]
   (if (and (list? expr) (seq expr))
     (let [expr (->> expr
                     macroexpand
-                    (prewalk-replace {'let `p/alet}))
+                    (prewalk-replace {'let `ci/alet}))
           type (first expr)]
       (condp = type
         'fn* `(fn ~@(async-fn expr))
         `def `(defn ~(second expr)
                 ~@(async-fn (last expr)))
-        `(p/do* ~expr)))
-    `(p/do* ~expr)))
+        `(ci/ado ~expr)))
+    `(ci/ado ~expr)))
 
 (defn await [& args]
   (throw (Exception. "await used outside async block!")))
@@ -34,4 +34,4 @@
  (defn g [x]
    (let [y (await (f x))
          z (inc y)]
-     (println z))))
+     z)))
