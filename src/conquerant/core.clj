@@ -13,8 +13,7 @@
   run asyncronously, and return a `CompletableFuture`.
 
   All async exectution occurs on the `ci/*executor*` pool,
-  which is bound to the common ForkJoinPool threadpool
-  by default."
+  which is bound to the common ForkJoinPool by default."
   [expr]
   (if (and (coll? expr) (seq expr))
     (let [expr (->> expr
@@ -30,8 +29,14 @@
     `(ci/ado ~expr)))
 
 (defn await
-  "Use inside `async` blocks.
+  "Use inside `async` `let` blocks:
+
+  (async
+    (let [x (async :x)
+          y (await x)]
+      y))
+
   Will wait for the `Completablefuture` to complete
   before evaluation resumes."
   [v]
-  (throw (Exception. "await used outside async block!")))
+  (throw (Exception. "await used outside async let block!")))
