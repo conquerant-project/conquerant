@@ -1,8 +1,7 @@
 (ns conquerant.core
   (:refer-clojure :exclude [await])
   (:require [clojure.walk :refer [prewalk-replace]]
-            [conquerant.internals :as ci])
-  (:import [java.util.concurrent CompletableFuture]))
+            [conquerant.internals :as ci]))
 
 (defn- async-fn [fn]
   (for [[argv & body] (rest fn)]
@@ -11,12 +10,17 @@
 (defmacro async
   "If `expr` is a `fn` or `defn` form, its body will
   run asyncronously. Otherwise, `expr` will itself
-  run asyncronously, and return a `CompletableFuture`."
+  run asyncronously, and return a `CompletableFuture`.
+
+  All async exectution occurs on the `ci/*executor*` pool,
+  which is bound to the common ForkJoinPool threadpool
+  by default."
   [expr]
   (if (and (coll? expr) (seq expr))
     (let [expr (->> expr
-                    macroexpand
-                    (prewalk-replace {'let `ci/alet}))]
+                    (prewalk-replace {'let `ci/alet
+                                      `await 'await})
+                    macroexpand)]
       (condp = (first expr)
         'fn* `(fn ~@(async-fn expr))
         `def `(defn ~(second expr)
