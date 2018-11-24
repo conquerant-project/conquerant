@@ -6,7 +6,7 @@
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
-(defn ^CompletableFuture promise [f]
+(defn ^CompletableFuture promise* [f]
   (let [p (CompletableFuture.)
         reject #(.completeExceptionally p %)
         resolve #(.complete p %)]
@@ -32,10 +32,10 @@
             (let [out (f in)]
               (if (promise? out)
                 out
-                (promise out))))))
+                (promise* out))))))
 
 (defn attempt [callback]
-  (promise (fn [resolve reject]
+  (promise* (fn [resolve reject]
              (let [result (callback)]
                (if (promise? result)
                  (then result resolve)

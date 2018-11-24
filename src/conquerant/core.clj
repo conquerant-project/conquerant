@@ -1,5 +1,5 @@
 (ns conquerant.core
-  (:refer-clojure :exclude [await])
+  (:refer-clojure :exclude [await promise])
   (:require [clojure.walk :refer [prewalk-replace]]
             [conquerant.internals :as ci]))
 
@@ -40,3 +40,19 @@
   before evaluation resumes."
   [v]
   (throw (Exception. "await used outside async let block!")))
+
+(defmacro promise
+  "Used to get values out of callbacks.
+
+  ex:
+  ;; some fn that takes a callback
+  (defn fetch [url callback] ...)
+
+  ;; can be used as
+  (let p
+    (promise [res rej]
+      (fetch \"http://some.service.com\"
+             #(res %))))"
+  [[resolve reject] & body]
+  `(ci/promise* (fn [~resolve ~reject]
+                  ~@body)))
