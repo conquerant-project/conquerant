@@ -6,7 +6,7 @@
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
-(defn promise [f]
+(defn ^CompletableFuture promise [f]
   (let [p (CompletableFuture.)
         reject #(.completeExceptionally p %)
         resolve #(.complete p %)]
