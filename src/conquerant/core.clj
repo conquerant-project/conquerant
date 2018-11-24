@@ -36,7 +36,7 @@
           y (await x)]
       y))
 
-  Will wait for the `Completablefuture` to complete
+  Will wait for the `CompletableFuture` to complete
   before evaluation resumes."
   [v]
   (throw (Exception. "await used outside async let block!")))
