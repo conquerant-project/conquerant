@@ -58,11 +58,11 @@ for concurrency that is simple *and* easy.
 (def url "https://gist.githubusercontent.com/divs1210/2ce84f3707b785a76d225d23f18c4904/raw/2dedab13201a8a8a2c91c3800040c84b70fef2e2/data.edn")
 
 (defn fetch [url]
-  (promise (fn [resolve _]
-             (client/get url
-                         {:async? true}
-                         #(resolve %)
-                         (fn [_])))))
+  (promise [resolve _]
+    (client/get url
+                {:async? true}
+                #(resolve %)
+                (fn [_]))))
 
 (async
   (let [response (await (fetch url))]
