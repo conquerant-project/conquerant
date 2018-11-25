@@ -12,6 +12,9 @@
   run asyncronously. Otherwise, `expr` will itself
   run asyncronously, and return a `CompletableFuture`.
 
+  WARNING: *all* `let` blocks inside an `async` block
+  return `CompletableFuture`s.
+
   All async exectution occurs on the `ci/*executor*` pool,
   which is bound to the common ForkJoinPool by default."
   [expr]
