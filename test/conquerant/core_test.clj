@@ -42,4 +42,14 @@
               (reject (Exception. "promise failed!")))]
       (is (thrown? Exception @p))
       (async (let [res (await p)]
-               (is (thrown? Exception res)))))))
+               (is (thrown? Exception res))))))
+
+  (testing "crossing fn boundaries"
+    (async
+     (let [ps (for [i (range 5)]
+                (promise [resolve _]
+                         (resolve i)))]
+       (is (= (range 1 6)
+              (for [p ps]
+                @(let [i (await p)]
+                   (inc i)))))))))
