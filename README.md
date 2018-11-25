@@ -12,6 +12,7 @@ for concurrency that is simple *and* easy.
 - but has a huge surface area, and can be daunting to learn
 - we don't always want this kind of power
 - doesn't allow using [custom threadpools](https://dev.clojure.org/jira/browse/ASYNC-94)
+- breaks on [function boundaries](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
 - [breaks emacs](https://github.com/clojure-emacs/cider/issues/1827)
 
 ## Usage
@@ -60,8 +61,8 @@ for concurrency that is simple *and* easy.
 - **`await`**
   - can only be used in `async` `let` blocks
     - normal `let` block anywhere inside an `async` block
-    - works across function boundaries, [unlike `core.async`](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
-    - the let block `will` itself return a `CallableFuture`
+    - every `let` block with a call to `await` returns a `CallableFuture`
+    - works across function boundaries
 
 ## License
 
