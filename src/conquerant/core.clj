@@ -64,9 +64,9 @@
 
   ;; can be used as
   (let p
-    (promise [res rej]
+    (promise [resolve]
       (fetch \"http://some.service.com\"
-             #(res %))))"
-  [[resolve reject] & body]
-  `(ci/promise* (fn [~resolve ~reject]
+             #(resolve %))))"
+  [[resolve] & body]
+  `(ci/promise* (fn [~resolve _#]
                   ~@body)))

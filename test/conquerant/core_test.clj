@@ -30,19 +30,12 @@
                   s3 (await s2)]
               (is (= @s2 s3)))))
 
-  (testing "resolving a promise"
+  (testing "promise"
     (let [p (promise [resolve _]
               (resolve :hi))]
       (is (= :hi @p))
       @(async (let [res (await p)]
                 (is (= :hi @p))))))
-
-  (testing "rejecting a promise"
-    (let [p (promise [_ reject]
-              (reject (Exception. "promise failed!")))]
-      (is (thrown? Exception @p))
-      (async (let [res (await p)]
-               (is (thrown? Exception res))))))
 
   (testing "crossing fn boundaries"
     (async
@@ -50,6 +43,6 @@
                 (promise [resolve _]
                          (resolve i)))]
        (is (= (range 1 6)
-              (for [p ps]
-                @(let [i (await p)]
-                   (inc i)))))))))
+              (map #(deref (let [i (await %)]
+                             (inc i)))
+                   ps)))))))
