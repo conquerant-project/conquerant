@@ -28,10 +28,11 @@
     @(async (let [s1 "hello"
                   s2 (async (reverse s1))
                   s3 (await s2)]
-              (is (= "hello" s1 @s2 s3))))
+              (is (= @s2 s3))))
 
-    (is (= 1 @(async (let [a 1]
-                       a)))))
+    @(async (is (= 1 (let [a 1] a))
+                "async let block without await
+                 doesn't return CallableFuture")))
 
   (testing "promise"
     (let [p (promise [resolve _]
