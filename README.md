@@ -55,13 +55,13 @@ for concurrency that is simple *and* easy.
   - can wrap
     - `defn` and `fn` forms - supports variadic versions: `(async (defn [a] (inc a)))`
     - any other expression, returning a `CompletableFuture`: `@(async [1 2])`
-  - all `let` blocks inside `async` run asynchronously and return `CompletableFuture`s.
   - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
 
 - **`await`**
   - can only be used in `async` `let` blocks
     - normal `let` block anywhere inside an `async` block
     - works across function boundaries, [unlike `core.async`](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
+    - the let block `will` itself return a `CallableFuture`
 
 ## License
 

@@ -12,9 +12,6 @@
   run asyncronously. Otherwise, `expr` will itself
   run asyncronously, and return a `CompletableFuture`.
 
-  WARNING: *all* `let` blocks inside an `async` block
-  return `CompletableFuture`s.
-
   All async exectution occurs on the `ci/*executor*` pool,
   which is bound to the common ForkJoinPool by default."
   [expr]
@@ -43,7 +40,8 @@
     `(ci/ado ~expr)))
 
 (defn await
-  "Use inside `async` `let` blocks:
+  "Use inside `async` `let` blocks.
+  The `let` block will return a `CompletableFuture`.
 
   (async
     (let [x (async :x)

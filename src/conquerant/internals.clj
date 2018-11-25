@@ -45,14 +45,20 @@
   `(attempt #(do ~@body)))
 
 (defmacro alet [bindings & body]
-  (->> (reverse (partition 2 bindings))
-       (reduce (fn [acc [l r]]
-                 (if (and (coll? r)
-                          (symbol? (first r))
-                          (not= "." (subs (name (first r)) 0 1)))
-                   (if (= 'await (first r))
-                     `(bind ~(second r)
+  (if (not-any? identity
+                (for [expr (->> bindings rest (take-nth 2))]
+                  (and (coll? expr)
+                       (= 'await (first expr)))))
+    `(let ~bindings ~@body)
+    (->> (partition 2 bindings)
+         reverse
+         (reduce (fn [acc [l r]]
+                   (if (and (coll? r)
+                            (symbol? (first r))
+                            (not= "." (subs (name (first r)) 0 1)))
+                     (if (= 'await (first r))
+                       `(bind ~(second r)
                               (fn [~l] ~acc))
-                     `(let [~l ~r] ~acc))
-                   `(let [~l ~r] ~acc)))
-               `(ado ~@body))))
+                       `(let [~l ~r] ~acc))
+                     `(let [~l ~r] ~acc)))
+                 `(ado ~@body)))))
