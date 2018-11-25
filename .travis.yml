@@ -1,1 +1,5 @@
 language: clojure
+
+after_success:
+- lein cloverage --codecov
+- bash <(curl -s https://codecov.io/bash)
