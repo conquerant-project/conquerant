@@ -16,7 +16,7 @@ for concurrency that is simple *and* easy.
 
 ## Usage
 
-**`[conquerant "0.1.2"]`**
+**`[conquerant "0.1.3"]`**
 
 ```clojure
 ;; Async HTTP Exaxmple

@@ -17,14 +17,25 @@
   [expr]
   (if (and (coll? expr) (seq expr))
     (let [expr (->> expr
-                    (prewalk-replace {'let `ci/alet
+                    (prewalk-replace {'let* `ci/alet
+                                      'let `ci/alet
+                                      `let `ci/alet
                                       `await 'await})
-                    macroexpand)]
-      (condp = (first expr)
-        'fn* `(fn ~@(async-fn expr))
-        `def `(defn ~(second expr)
-                ~@(async-fn (last expr)))
-        `do  `(ci/ado ~(rest expr))
+                    macroexpand)
+          type (first expr)]
+      (cond
+        (or (= 'fn* type)
+            (= `fn type))
+        `(fn ~@(async-fn expr))
+
+        (= `def type)
+        `(defn ~(second expr)
+           ~@(async-fn (last expr)))
+
+        (= `do type)
+        `(ci/ado ~(rest expr))
+
+        :else
         `(ci/ado ~expr)))
     `(ci/ado ~expr)))
 
