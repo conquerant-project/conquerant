@@ -16,7 +16,7 @@ for concurrency that is simple *and* easy.
 
 ## Usage
 
-`[conquerant "0.1.1"]`
+`[conquerant "0.1.2"]`
 
 ```clojure
 (refer-clojure :exclude '[await])
