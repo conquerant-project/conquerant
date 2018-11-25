@@ -54,8 +54,18 @@ for concurrency that is simple *and* easy.
 
 - **`async`**
   - can wrap
-    - `defn` and `fn` forms - supports variadic versions: `(async (defn [a] (inc a)))`
-    - any other expression, returning a `CompletableFuture`: `@(async [1 2])`
+    - `defn` and `fn` forms - supports variadic versions
+    ```clojure
+    (async (defn f
+             ([a]
+               (inc a))
+             ([a b]
+               (* a b))))
+    ```
+    - any other expression, returning a `CompletableFuture`
+    ```clojure
+    @(async [1 2]) ;; => [1 2]
+    ```
   - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
 
 - **`await`**
@@ -64,8 +74,9 @@ for concurrency that is simple *and* easy.
     - every `let` block with a call to `await` returns a `CallableFuture`
     - recursively unwraps `CallableFuture`s
     ```clojure
-      (let [a (await (async (async (async :a))))]
-        (is (= :a a)))
+    (async (let [a (await (async (async (async :a))))]
+             (println (= :a a))))
+    ;; => true
     ```
     - works across function boundaries
 
