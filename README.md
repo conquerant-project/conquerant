@@ -1,4 +1,4 @@
-# conquerant
+# conquerant [![Build Status](https://travis-ci.com/divs1210/conquerant.svg?branch=master)](https://travis-ci.com/divs1210/conquerant)
 
 **async/await for Clojure**
 
