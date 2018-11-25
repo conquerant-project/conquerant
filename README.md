@@ -49,26 +49,28 @@ for concurrency that is simple *and* easy.
     - works across function boundaries, [unlike `core.async`](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
 
 ```clojure
-(refer-clojure :exclude '[promise])
-(require '[conquerant.core :refer [promise]])
+;; Async HTTP Exaxmple
+;; ===================
+(refer-clojure :exclude '[await promise])
+(require '[clj-http.client :as client]
+         '[conquerant.core :refer [async await promise]])
 
-;; mock http fn
-(defn http-get [url callback]
-  (future
-    (Thread/sleep 1000) ;; n/w call
-    (callback {:url url})))
+(def url "https://gist.githubusercontent.com/divs1210/2ce84f3707b785a76d225d23f18c4904/raw/2dedab13201a8a8a2c91c3800040c84b70fef2e2/data.edn")
 
-;; call with callback
-(http-get "http://github.com" println)
-;; => #<Future@5ae5283a: :pending>
-;; after a second:
-;; {:url http://github.com}
+(defn fetch [url]
+  (promise (fn [resolve _]
+             (client/get url
+                         {:async? true}
+                         #(resolve %)
+                         (fn [_])))))
 
-;; call with promise
-@(promise [resolve _]
-  (http-get "http://github.com" #(resolve %)))
-;; after a second:
-;; => {:url "http://github.com"}
+(async
+  (let [response (await (fetch url))]
+    (println "Response Body:" (:body response))))
+
+(println "fetching asynchronously...")
+;; => fetching asynchronously...
+;; => Response Body: {:result 1}
 ```
 
 - **`promise`**
