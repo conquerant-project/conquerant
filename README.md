@@ -31,13 +31,15 @@ for concurrency that is simple *and* easy.
   (promise [resolve]
     (client/get url
                 {:async? true}
-                #(resolve [% nil])
-                #(resolve [nil %]))))
+                (fn [response]
+                  (resolve [response nil]))
+                (fn [error]
+                  (resolve [nil error])))))
 
 (async
-  (let [[response err] (await (fetch url))]
-    (if err
-      (println "Error:" (.getMessage err))
+  (let [[response error] (await (fetch url))]
+    (if error
+      (println "Error:" (.getMessage error))
       (println "Response Body:" (:body response)))))
 
 (println "fetching asynchronously...")
