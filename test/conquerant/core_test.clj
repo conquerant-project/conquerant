@@ -32,12 +32,18 @@
 
     @(async (is (= 1 (let [a 1] a))
                 "async let block without await
-                 doesn't return CallableFuture")))
+                 doesn't return CallableFuture"))
+
+    @(async
+      (let [a (await (async (async (async :a))))]
+        (is (= :a a)
+            "unwraps recursively"))))
 
   (testing "promise"
     (let [p (promise [resolve _]
               (resolve :hi))]
       (is (= :hi @p))
+
       @(async (let [res (await p)]
                 (is (= :hi @p))))))
 
