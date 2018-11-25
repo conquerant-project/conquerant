@@ -16,37 +16,7 @@ for concurrency that is simple *and* easy.
 
 ## Usage
 
-`[conquerant "0.1.2"]`
-
-```clojure
-(refer-clojure :exclude '[await])
-(require '[conquerant.core :refer [async await]])
-
-(async
- (defn add
-   ([a] a)
-   ([a b] (+ a b))))
-
-(def test-async
-  (async
-   (let [sum-1 (await (add 2))
-         sum-2 (await (add 2 3))]
-     [sum-1 sum-2])))
-
-@test-async
-;; => [2 5]
-```
-
-- **`async`**
-  - can wrap
-    - `defn` and `fn` forms - supports variadic versions
-    - any other expression, returning a deref-able `CompletableFuture`
-  - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
-
-- **`await`**
-  - can only be used in `async` `let` blocks
-    - normal `let` block anywhere inside an `async` block
-    - works across function boundaries, [unlike `core.async`](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
+**`[conquerant "0.1.2"]`**
 
 ```clojure
 ;; Async HTTP Exaxmple
@@ -58,11 +28,11 @@ for concurrency that is simple *and* easy.
 (def url "https://gist.githubusercontent.com/divs1210/2ce84f3707b785a76d225d23f18c4904/raw/2dedab13201a8a8a2c91c3800040c84b70fef2e2/data.edn")
 
 (defn fetch [url]
-  (promise [resolve _]
+  (promise [resolve reject]
     (client/get url
                 {:async? true}
                 #(resolve %)
-                (fn [_]))))
+                #(reject %))))
 
 (async
   (let [response (await (fetch url))]
@@ -76,6 +46,17 @@ for concurrency that is simple *and* easy.
 - **`promise`**
   - gets value/error out of callback
   - returns a `CompletableFuture`
+
+- **`async`**
+  - can wrap
+    - `defn` and `fn` forms - supports variadic versions: `(async (defn [a] (inc a)))`
+    - any other expression, returning a `CompletableFuture`: `@(async [1 2])`
+  - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
+
+- **`await`**
+  - can only be used in `async` `let` blocks
+    - normal `let` block anywhere inside an `async` block
+    - works across function boundaries, [unlike `core.async`](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
 
 ## License
 
