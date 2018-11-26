@@ -8,7 +8,10 @@
   (testing "async block"
     (let [x (async :hello)]
       (is (ci/promise? x))
-      (is (= :hello @x))))
+      (is (= :hello @x)))
+
+    (is (= 1 @(async (do 1)))
+        "async block works with do"))
 
   (testing "async fn"
     (let [twice (async (fn [x]
@@ -25,6 +28,9 @@
     (is (= 6 @(twice 3))))
 
   (testing "await"
+    (is (thrown? Exception (await (async 1)))
+        "await cannot be used outside async let")
+
     @(async (let [s1 "hello"
                   s2 (async (reverse s1))
                   s3 (await s2)]

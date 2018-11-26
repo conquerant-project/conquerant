@@ -33,7 +33,7 @@
            ~@(async-fn (last expr)))
 
         (= `do type)
-        `(ci/ado ~(rest expr))
+        `(ci/ado ~@(rest expr))
 
         :else
         `(ci/ado ~expr)))
