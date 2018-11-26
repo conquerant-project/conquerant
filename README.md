@@ -72,12 +72,6 @@ for concurrency that is simple *and* easy.
   - can only be used in `async` `let` blocks
     - normal `let` block anywhere inside an `async` block
     - every `let` block with a call to `await` returns a `CallableFuture`
-    - recursively unwraps `CallableFuture`s
-    ```clojure
-    (async (let [a (await (async (async (async :a))))]
-             (println (= :a a))))
-    ;; => true
-    ```
     - works across function boundaries
 
 ## License
