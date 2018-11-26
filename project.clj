@@ -1,4 +1,4 @@
-(defproject conquerant "0.2.1"
+(defproject conquerant "0.2.2"
   :description "async/await for Clojure"
   :url "https://github.com/divs1210/conquerant"
   :license {:name "Eclipse Public License"
