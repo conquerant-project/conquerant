@@ -36,6 +36,12 @@
                   s3 (await s2)]
               (is (= @s2 s3))))
 
+    @(async (is (ci/promise? (let [a (async 1)
+                                   b (await a)]
+                               b))
+                "async let block with await
+                 returns CallableFuture"))
+
     @(async (is (= 1 (let [a 1] a))
                 "async let block without await
                  doesn't return CallableFuture"))
