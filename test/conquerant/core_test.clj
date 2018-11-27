@@ -3,7 +3,7 @@
   (:require [clojure.test :refer :all]
             [conquerant.core :refer :all]))
 
-(deftest conquerant-tests
+(deftest core-tests
   (testing "async block"
     (let [x (async :hello)]
       (is (promise? x))
@@ -67,3 +67,17 @@
               (map #(deref (let [i (await %)]
                              (inc i)))
                    ps)))))))
+
+
+(deftest perf-tests
+  (testing "> 1 million concurrent tasks"
+    @(async (let [N 1000000
+                  rand-ints (repeatedly N #(rand-int 100))
+                  int-promises (doall (map #(async %) rand-ints))
+                  sum (await (reduce (fn [acc x]
+                                       (let [acc (await acc)
+                                             x (await x)]
+                                         (+ acc x)))
+                                     (async 0)
+                                     int-promises))]
+              (is (= (apply + rand-ints) sum))))))
