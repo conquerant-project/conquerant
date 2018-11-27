@@ -68,3 +68,8 @@
   [[resolve] & body]
   `(ci/promise* (fn [~resolve _#]
                   ~@body)))
+
+(defn promise?
+  "Returns `true` if obj is a `CompletableFuture`."
+  [obj]
+  (ci/promise? obj))

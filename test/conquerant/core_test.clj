@@ -1,13 +1,12 @@
 (ns conquerant.core-test
   (:refer-clojure :exclude [await promise])
   (:require [clojure.test :refer :all]
-            [conquerant.core :refer [async await promise]]
-            [conquerant.internals :as ci]))
+            [conquerant.core :refer :all]))
 
 (deftest conquerant-tests
   (testing "async block"
     (let [x (async :hello)]
-      (is (ci/promise? x))
+      (is (promise? x))
       (is (= :hello @x)))
 
     (is (= 1 @(async (do 1)))
@@ -17,14 +16,14 @@
     (let [twice (async (fn [x]
                          (* 2 x)))]
       (is (fn? twice))
-      (is (ci/promise? (twice 3)))
+      (is (promise? (twice 3)))
       (is (= 6 @(twice 3)))))
 
   (testing "async defn"
     (async (defn twice [x]
              (* 2 x)))
     (is (fn? twice))
-    (is (ci/promise? (twice 3)))
+    (is (promise? (twice 3)))
     (is (= 6 @(twice 3))))
 
   (testing "await"
@@ -36,9 +35,9 @@
                   s3 (await s2)]
               (is (= @s2 s3))))
 
-    @(async (is (ci/promise? (let [a (async 1)
-                                   b (await a)]
-                               b))
+    @(async (is (promise? (let [a (async 1)
+                                b (await a)]
+                            b))
                 "async let block with await
                  returns CallableFuture"))
 
@@ -63,7 +62,7 @@
     (async
      (let [ps (for [i (range 5)]
                 (promise [resolve _]
-                         (resolve i)))]
+                  (resolve i)))]
        (is (= (range 1 6)
               (map #(deref (let [i (await %)]
                              (inc i)))
