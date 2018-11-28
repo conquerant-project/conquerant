@@ -40,7 +40,7 @@
     `(ci/ado ~expr)))
 
 (defn await
-  "Use inside `async` `let` blocks.
+  "Use inside `async` `let` bindings.
   The `let` block will return a `CompletableFuture`.
 
   (async

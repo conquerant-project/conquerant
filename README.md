@@ -69,7 +69,7 @@ for concurrency that is simple *and* easy.
   - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
 
 - **`await`**
-  - can only be used in `async` `let` blocks
+  - can only be used in `async` `let` bindings
     - normal `let` block anywhere inside an `async` block
     - every `let` block with a call to `await` returns a `CallableFuture`
     - works across function boundaries
