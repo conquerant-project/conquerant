@@ -71,7 +71,7 @@ for concurrency that is simple *and* easy.
 - **`await`**
   - can only be used in `async` `let` bindings
     - normal `let` block anywhere inside an `async` block
-    - every `let` block with a call to `await` returns a `CallableFuture`
+    - every `let` block with a call to `await` returns a `CompletableFuture`
     - works across function boundaries
 
 ## License
