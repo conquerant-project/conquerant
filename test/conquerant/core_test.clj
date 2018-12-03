@@ -56,7 +56,13 @@
       (is (= :hi @p))
 
       @(async (let [res (await p)]
-                (is (= :hi @p))))))
+                (is (= :hi @p)))))
+
+    (let [p (promise [_])]
+      (complete p 1)
+      @(async (let [x (await p)]
+                (is (= 1 x))))
+      (is (= 1 @p))))
 
   (testing "crossing fn boundaries"
     (async
