@@ -51,7 +51,7 @@
             "unwraps recursively"))))
 
   (testing "promise"
-    (let [p (promise [resolve _]
+    (let [p (promise [resolve]
               (resolve :hi))]
       (is (= :hi @p))
 
@@ -61,7 +61,7 @@
   (testing "crossing fn boundaries"
     (async
      (let [ps (for [i (range 5)]
-                (promise [resolve _]
+                (promise [resolve]
                   (resolve i)))]
        (is (= (range 1 6)
               (map #(deref (let [i (await %)]
