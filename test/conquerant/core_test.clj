@@ -70,7 +70,7 @@
 
 
 (deftest perf-tests
-  (testing "> 1 million concurrent tasks"
+  (testing "> 2 million concurrent tasks"
     @(async (let [N 1000000
                   rand-ints (repeatedly N #(rand-int 100))
                   int-promises (doall (map #(async %) rand-ints))
