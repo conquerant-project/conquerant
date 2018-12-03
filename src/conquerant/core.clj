@@ -73,3 +73,10 @@
   "Returns `true` if obj is a `CompletableFuture`."
   [obj]
   (ci/promise? obj))
+
+
+(defn complete
+  "Completes the `CompletableFuture`.
+  It will contain x."
+  [promise x]
+  (ci/complete promise x))

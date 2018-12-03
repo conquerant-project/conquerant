@@ -6,10 +6,13 @@
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
+(defn complete [^CompletableFuture promise val]
+  (.complete promise val))
+
 (defn ^CompletableFuture promise* [f]
   (let [p (CompletableFuture.)
         reject #(.completeExceptionally p %)
-        resolve #(.complete p %)]
+        resolve #(complete p %)]
     (try
       (f resolve reject)
       (catch Throwable e
