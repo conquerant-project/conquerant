@@ -1,12 +1,9 @@
 (ns conquerant.internals
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor ForkJoinPool]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
-
-(defonce ^:dynamic *scheduler*
-  (Executors/newSingleThreadScheduledExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
@@ -26,11 +23,18 @@
 
 (defn bind [^CompletionStage p callback & [timeout-ms timeout-val :as timeout]]
   (let [binds (clojure.lang.Var/getThreadBindingFrame)
-        func (reify Function
-               (apply [_ v]
-                 (clojure.lang.Var/resetThreadBindingFrame binds)
-                 (callback v)))]
-    (.thenComposeAsync p ^Function func ^Executor *executor*)))
+        promise (CompletableFuture.)]
+    (CompletableFuture/runAsync #(try
+                                   (.complete promise (deref p timeout-ms timeout-val))
+                                   (catch Throwable e
+                                     (.completeExceptionally promise e)))
+                                *executor*)
+    (.thenComposeAsync promise
+                       ^Function (reify Function
+                                   (apply [_ v]
+                                     (clojure.lang.Var/resetThreadBindingFrame binds)
+                                     (callback v)))
+                       ^Executor *executor*)))
 
 (defn then [p f]
   (bind p (fn promise-wrap [in]
