@@ -1,10 +1,12 @@
 (ns conquerant.internals
-  (:refer-clojure :exclude [promise])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
+
+(defonce ^:dynamic *scheduler*
+  (Executors/newSingleThreadScheduledExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
@@ -22,7 +24,7 @@
 (defn promise? [v]
   (instance? CompletionStage v))
 
-(defn bind [^CompletionStage p callback]
+(defn bind [^CompletionStage p callback & [timeout-ms timeout-val :as timeout]]
   (let [binds (clojure.lang.Var/getThreadBindingFrame)
         func (reify Function
                (apply [_ v]
@@ -45,7 +47,8 @@
                  (resolve result))))))
 
 (defmacro ado [& body]
-  `(attempt #(do ~@body)))
+  `(attempt (fn []
+              ~@body)))
 
 (defmacro alet [bindings & body]
   (if (not-any? identity
@@ -60,8 +63,10 @@
                             (symbol? (first r))
                             (not= "." (subs (name (first r)) 0 1)))
                      (if (= 'await (first r))
-                       `(bind ~(second r)
-                              (fn [~l] ~acc))
+                       (let [[_ expr & timeout] r]
+                         `(bind ~expr
+                                (fn [~l] ~acc)
+                                ~@timeout))
                        `(let [~l ~r] ~acc))
                      `(let [~l ~r] ~acc)))
                  `(ado ~@body)))))

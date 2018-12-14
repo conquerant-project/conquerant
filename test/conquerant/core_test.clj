@@ -48,7 +48,13 @@
     @(async
       (let [a (await (async (async (async :a))))]
         (is (= :a a)
-            "unwraps recursively"))))
+            "unwraps recursively")))
+
+    @(async
+      (let [p (promise [_])
+            x (await p 1000 5)]
+        (is (= 5 x)
+            "await can timeout like deref"))))
 
   (testing "promise"
     (let [p (promise [resolve]
