@@ -40,8 +40,7 @@
                  out
                  (promise* out))))))
   ([p f timeout-ms timeout-val]
-   (let [resolved? (atom false)
-         promise (CompletableFuture.)
+   (let [promise (CompletableFuture.)
          start-time-millis (System/currentTimeMillis)]
      (.submit ^ScheduledExecutorService *scheduler*
               ^Runnable #(try
