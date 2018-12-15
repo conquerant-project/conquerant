@@ -27,9 +27,7 @@
                (apply [_ v]
                  (clojure.lang.Var/resetThreadBindingFrame binds)
                  (callback v)))]
-    (.thenComposeAsync p
-                       ^Function func
-                       ^Executor *executor*)))
+    (.thenComposeAsync p ^Function func ^Executor *executor*)))
 
 (defn then
   ([p f]
