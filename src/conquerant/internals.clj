@@ -1,10 +1,12 @@
 (ns conquerant.internals
-  (:refer-clojure :exclude [promise])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
+
+(defonce ^:dynamic *scheduler*
+  (Executors/newSingleThreadScheduledExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
@@ -30,12 +32,19 @@
                  (callback v)))]
     (.thenComposeAsync p ^Function func ^Executor *executor*)))
 
-(defn then [p f]
-  (bind p (fn promise-wrap [in]
-            (let [out (f in)]
-              (if (promise? out)
-                out
-                (promise* out))))))
+(defn then
+  ([p f]
+   (bind p (fn promise-wrap [in]
+             (let [out (f in)]
+               (if (promise? out)
+                 out
+                 (promise* out))))))
+  ([p f timeout-ms timeout-val]
+   (let [resolved? (atom false)
+         promise (CompletableFuture.)]
+     (.submit ^ScheduledExecutorService *scheduler*
+              ^Runnable #(complete promise (deref p timeout-ms timeout-val)))
+     (then promise f))))
 
 (defn attempt [callback]
   (promise* (fn [resolve reject]
@@ -45,7 +54,8 @@
                  (resolve result))))))
 
 (defmacro ado [& body]
-  `(attempt #(do ~@body)))
+  `(attempt (fn []
+              ~@body)))
 
 (defmacro alet [bindings & body]
   (if (not-any? identity
@@ -60,8 +70,10 @@
                             (symbol? (first r))
                             (not= "." (subs (name (first r)) 0 1)))
                      (if (= 'await (first r))
-                       `(bind ~(second r)
-                              (fn [~l] ~acc))
+                       (let [[_ expr & timeout] r]
+                         `(then ~expr
+                                (fn [~l] ~acc)
+                                ~@timeout))
                        `(let [~l ~r] ~acc))
                      `(let [~l ~r] ~acc)))
                  `(ado ~@body)))))
