@@ -52,8 +52,9 @@
 
     @(async
       (let [p (promise [_])
-            x (await p 1000 5)]
-        (is (= 5 x)
+            x (await p 1000 5)
+            y x]
+        (is (= 5 y)
             "await can timeout like deref"))))
 
   (testing "promise"
