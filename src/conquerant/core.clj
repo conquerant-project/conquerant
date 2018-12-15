@@ -76,7 +76,6 @@
   [obj]
   (ci/promise? obj))
 
-
 (defn complete
   "Completes the `CompletableFuture`.
   It will contain x."
