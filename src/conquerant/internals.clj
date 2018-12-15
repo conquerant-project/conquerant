@@ -1,9 +1,12 @@
 (ns conquerant.internals
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
+
+(defonce ^:dynamic *scheduler*
+  (Executors/newSingleThreadScheduledExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
@@ -37,8 +40,10 @@
                  out
                  (promise* out))))))
   ([p f timeout-ms timeout-val]
-   (let [promise (promise* (fn [resolve _]
-                             (resolve (deref p timeout-ms timeout-val))))]
+   (let [resolved? (atom false)
+         promise (CompletableFuture.)]
+     (.submit ^ScheduledExecutorService *scheduler*
+              ^Runnable #(complete promise (deref p timeout-ms timeout-val)))
      (then promise f))))
 
 (defn attempt [callback]
