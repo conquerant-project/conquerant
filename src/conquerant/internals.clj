@@ -41,9 +41,14 @@
                  (promise* out))))))
   ([p f timeout-ms timeout-val]
    (let [resolved? (atom false)
-         promise (CompletableFuture.)]
+         promise (CompletableFuture.)
+         start-time-millis (System/currentTimeMillis)]
      (.submit ^ScheduledExecutorService *scheduler*
-              ^Runnable #(complete promise (deref p timeout-ms timeout-val)))
+              ^Runnable #(let [spent-ms (- (System/currentTimeMillis)
+                                           start-time-millis)]
+                           (complete promise (deref p
+                                                    (max 0 (- timeout-ms spent-ms))
+                                                    timeout-val))))
      (then promise f))))
 
 (defn attempt [callback]
