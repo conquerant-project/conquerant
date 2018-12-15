@@ -44,11 +44,14 @@
          promise (CompletableFuture.)
          start-time-millis (System/currentTimeMillis)]
      (.submit ^ScheduledExecutorService *scheduler*
-              ^Runnable #(let [spent-ms (- (System/currentTimeMillis)
-                                           start-time-millis)]
-                           (complete promise (deref p
-                                                    (max 0 (- timeout-ms spent-ms))
-                                                    timeout-val))))
+              ^Runnable #(try
+                           (let [spent-ms (- (System/currentTimeMillis)
+                                             start-time-millis)]
+                             (complete promise (deref p
+                                                      (max 0 (- timeout-ms spent-ms))
+                                                      timeout-val)))
+                           (catch Throwable e
+                               (.completeExceptionally promise e))))
      (then promise f))))
 
 (defn attempt [callback]
