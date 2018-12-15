@@ -21,27 +21,27 @@
 (defn promise? [v]
   (instance? CompletionStage v))
 
-(defn bind [^CompletionStage p callback & [timeout-ms timeout-val :as timeout]]
+(defn bind [^CompletionStage p callback]
   (let [binds (clojure.lang.Var/getThreadBindingFrame)
-        promise (CompletableFuture.)]
-    (CompletableFuture/runAsync #(try
-                                   (.complete promise (deref p timeout-ms timeout-val))
-                                   (catch Throwable e
-                                     (.completeExceptionally promise e)))
-                                *executor*)
-    (.thenComposeAsync promise
-                       ^Function (reify Function
-                                   (apply [_ v]
-                                     (clojure.lang.Var/resetThreadBindingFrame binds)
-                                     (callback v)))
+        func (reify Function
+               (apply [_ v]
+                 (clojure.lang.Var/resetThreadBindingFrame binds)
+                 (callback v)))]
+    (.thenComposeAsync p
+                       ^Function func
                        ^Executor *executor*)))
 
-(defn then [p f]
-  (bind p (fn promise-wrap [in]
-            (let [out (f in)]
-              (if (promise? out)
-                out
-                (promise* out))))))
+(defn then
+  ([p f]
+   (bind p (fn promise-wrap [in]
+             (let [out (f in)]
+               (if (promise? out)
+                 out
+                 (promise* out))))))
+  ([p f timeout-ms timeout-val]
+   (let [promise (promise* (fn [resolve _]
+                             (resolve (deref p timeout-ms timeout-val))))]
+     (then promise f))))
 
 (defn attempt [callback]
   (promise* (fn [resolve reject]
@@ -68,7 +68,7 @@
                             (not= "." (subs (name (first r)) 0 1)))
                      (if (= 'await (first r))
                        (let [[_ expr & timeout] r]
-                         `(bind ~expr
+                         `(then ~expr
                                 (fn [~l] ~acc)
                                 ~@timeout))
                        `(let [~l ~r] ~acc))
