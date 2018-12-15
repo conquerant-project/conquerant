@@ -5,7 +5,7 @@
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
-(defonce ^:dynamic *scheduler*
+(defonce ^:dynamic *timeout-scheduler*
   (Executors/newSingleThreadExecutor))
 
 (defn complete [^CompletableFuture promise val]
@@ -42,7 +42,7 @@
   ([p f timeout-ms timeout-val]
    (let [promise (CompletableFuture.)
          start-time-millis (System/currentTimeMillis)]
-     (.submit ^ExecutorService *scheduler*
+     (.submit ^ExecutorService *timeout-scheduler*
               ^Runnable #(try
                            (let [spent-ms (- (System/currentTimeMillis)
                                              start-time-millis)]
