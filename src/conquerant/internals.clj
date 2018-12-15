@@ -50,7 +50,7 @@
                                                       (max 0 (- timeout-ms spent-ms))
                                                       timeout-val)))
                            (catch Throwable e
-                               (.completeExceptionally promise e))))
+                             (.completeExceptionally promise e))))
      (then promise f))))
 
 (defn attempt [callback]
