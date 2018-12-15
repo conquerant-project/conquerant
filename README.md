@@ -38,7 +38,9 @@ for concurrency that is simple *and* easy.
                   (resolve [nil error])))))
 
 (async
-  (let [[response error] (await (fetch url))]
+  (let [[response error] (await (fetch url)
+                                1000 
+                                [{:body {}} nil])]
     (if error
       (println "Error:" (.getMessage error))
       (println "Response Body:" (:body response)))))
@@ -52,6 +54,7 @@ for concurrency that is simple *and* easy.
   - gets value/error out of callback
   - returns a `CompletableFuture`
   - can be resolved from outside via `complete`
+  - can be `deref`ed: `@(promise [resolve] (resolve :hi))`
 
 - **`async`**
   - can wrap
@@ -63,7 +66,7 @@ for concurrency that is simple *and* easy.
              ([a b]
                (* a b))))
     ```
-    - any other expression, returning a `CompletableFuture`
+    - any other expression, returning a `CompletableFuture` (`promise`)
     ```clojure
     @(async [1 2]) ;; => [1 2]
     ```
@@ -73,7 +76,8 @@ for concurrency that is simple *and* easy.
   - can only be used in `async` `let` bindings
     - normal `let` block anywhere inside an `async` block
     - every `let` block with a call to `await` returns a `CompletableFuture`
-    - works across function boundaries
+  - works across function boundaries
+  - can timeout like `deref`: `(await p 1000 :timeout)`
 
 ## License
 
