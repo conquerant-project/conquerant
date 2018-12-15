@@ -38,9 +38,7 @@ for concurrency that is simple *and* easy.
                   (resolve [nil error])))))
 
 (async
-  (let [[response error] (await (fetch url)
-                                1000 
-                                [{:body {}} nil])]
+  (let [[response error] (await (fetch url))]
     (if error
       (println "Error:" (.getMessage error))
       (println "Response Body:" (:body response)))))
