@@ -94,3 +94,16 @@
                                      (async 0)
                                      int-promises))]
               (is (= (apply + rand-ints) sum))))))
+
+
+(deftest recursion-test
+  (testing "recursive asynchronous tasks don't blow the stack"
+    (letfn [(async-countdown [n then-return]
+              (async
+               (if (> n 0)
+                 (async-countdown (dec n) then-return)
+                 then-return)))]
+      (is (= :passed
+             (deref (async-countdown 5000 :passed)
+                    1000
+                    :failed))))))

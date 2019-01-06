@@ -15,10 +15,11 @@
   (let [p (CompletableFuture.)
         reject #(.completeExceptionally p %)
         resolve #(complete p %)]
-    (try
-      (f resolve reject)
-      (catch Throwable e
-        (reject e)))
+    (CompletableFuture/runAsync #(try
+                                   (f resolve reject)
+                                   (catch Throwable e
+                                     (reject e)))
+                                *executor*)
     p))
 
 (defn promise? [v]
