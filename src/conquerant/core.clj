@@ -19,8 +19,7 @@
     (let [expr (->> expr
                     (prewalk-replace {'let* `ci/alet
                                       'let `ci/alet
-                                      `let `ci/alet
-                                      `await 'await})
+                                      `let `ci/alet})
                     macroexpand)
           type (first expr)]
       (cond

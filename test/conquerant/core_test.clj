@@ -1,7 +1,7 @@
 (ns conquerant.core-test
   (:refer-clojure :exclude [await promise])
   (:require [clojure.test :refer :all]
-            [conquerant.core :refer :all]))
+            [conquerant.core :refer :all :as a]))
 
 (deftest core-tests
   (testing "async block"
@@ -55,7 +55,13 @@
             x (await p 1000 5)
             y x]
         (is (= 5 y)
-            "await can timeout like deref"))))
+            "await can timeout like deref")))
+
+    @(async
+      (let [a (async 1)
+            b (a/await a)]
+        (is (= 1 b)
+            "await works when prefixed with namespace"))))
 
   (testing "promise"
     (let [p (promise [resolve]

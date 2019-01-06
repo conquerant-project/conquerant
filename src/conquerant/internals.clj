@@ -65,11 +65,19 @@
   `(attempt (fn []
               ~@body)))
 
+(in-ns 'conquerant.core)
+(declare await)
+(in-ns 'conquerant.internals)
+
+(defn await? [sym]
+  (and (symbol? sym)
+       (= #'conquerant.core/await (resolve sym))))
+
 (defmacro alet [bindings & body]
   (if (not-any? identity
                 (for [expr (->> bindings rest (take-nth 2))]
                   (and (coll? expr)
-                       (= 'await (first expr)))))
+                       (await? (first expr)))))
     `(let ~bindings ~@body)
     (->> (partition 2 bindings)
          reverse
@@ -77,7 +85,7 @@
                    (if (and (coll? r)
                             (symbol? (first r))
                             (not= "." (subs (name (first r)) 0 1)))
-                     (if (= 'await (first r))
+                     (if (await? (first r))
                        (let [[_ expr & timeout] r]
                          `(then ~expr
                                 (fn [~l] ~acc)
