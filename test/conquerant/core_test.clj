@@ -88,18 +88,14 @@
                    ps)))))))
 
 
-(deftest perf-tests
-  (testing "> 2 million concurrent tasks"
-    @(async (let [N 1000000
-                  rand-ints (repeatedly N #(rand-int 100))
-                  int-promises (doall (map #(async %) rand-ints))
-                  sum (await (reduce (fn [acc x]
-                                       (let [acc (await acc)
-                                             x (await x)]
-                                         (+ acc x)))
-                                     (async 0)
-                                     int-promises))]
-              (is (= (apply + rand-ints) sum))))))
+(deftest perf-test
+  (testing "1 million concurrent tasks"
+    (let [accumulator (atom 0)
+          N 1e6]
+      (dotimes [i N]
+        (async (swap! accumulator inc)))
+      (Thread/sleep 1000)
+      (is (== N @accumulator)))))
 
 
 (deftest recursion-test
