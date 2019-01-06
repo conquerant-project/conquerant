@@ -107,5 +107,5 @@
                  then-return)))]
       (is (= :passed
              (deref (async-countdown 5000 :passed)
-                    1000
+                    5000
                     :failed))))))
