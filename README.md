@@ -2,7 +2,7 @@
 
 **async/await for Clojure**
 
-[![Clojars Project](https://img.shields.io/clojars/v/conquerant.svg)](https://clojars.org/conquerant) [![Build Status](https://travis-ci.com/divs1210/conquerant.svg?branch=master)](https://travis-ci.com/divs1210/conquerant)
+[![Clojars Project](https://img.shields.io/clojars/v/conquerant.svg)](https://clojars.org/conquerant) [![Build Status](https://travis-ci.com/divs1210/conquerant.svg?branch=master)](https://travis-ci.com/divs1210/conquerant) [![codecov](https://codecov.io/gh/divs1210/conquerant/branch/master/graph/badge.svg)](https://codecov.io/gh/divs1210/conquerant)
 
 A lightweight Clojure wrapper around `ForkJoinPool` and `CompletableFuture`
 for concurrency that is simple *and* easy.
