@@ -84,3 +84,11 @@
   It will contain x."
   [promise x]
   (ci/complete promise x))
+
+(defmacro with-async-executor
+  "`async` blocks in body will run on
+  the given `ExecutorService`'s threadpool."
+  [executor & body]
+  `(let [executor# ~executor]
+     (binding [ci/*executor* executor#]
+       ~@body)))

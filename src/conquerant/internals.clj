@@ -65,9 +65,8 @@
   `(attempt (fn []
               ~@body)))
 
-(in-ns 'conquerant.core)
-(declare await)
-(in-ns 'conquerant.internals)
+(create-ns 'conquerant.core)
+(intern 'conquerant.core 'await)
 
 (defn await? [sym]
   (and (symbol? sym)
