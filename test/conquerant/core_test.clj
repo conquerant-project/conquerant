@@ -51,7 +51,7 @@
             "unwraps recursively")))
 
     @(async
-      (let [p (promise [_])
+      (let [p (promise)
             x (await p 1000 5)
             y x]
         (is (= 5 y)
@@ -71,7 +71,7 @@
       @(async (let [res (await p)]
                 (is (= :hi @p)))))
 
-    (let [p (promise [_])]
+    (let [p (promise)]
       (complete p 1)
       @(async (let [x (await p)]
                 (is (= 1 x))))
