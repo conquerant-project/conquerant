@@ -68,7 +68,7 @@ for concurrency that is simple *and* easy.
     ```clojure
     @(async [1 2]) ;; => [1 2]
     ```
-  - `conquerant.internals/*executor*` is bound to the common `ForkJoinPool` pool by default
+  - can run on a custom `ExecutorService` using `with-async-executor`
 
 - **`await`**
   - can only be used in `async` `let` bindings
