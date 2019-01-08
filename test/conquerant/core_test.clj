@@ -115,13 +115,12 @@
 (deftest custom-threadpool-test
   (testing "execution on custom threadpool"
     (let [custom-pool (Executors/newSingleThreadExecutor)
-          custom-pool-thread (let [p (promise)]
-                               (.submit ^ExecutorService custom-pool
-                                        ^Runnable #(complete p (Thread/currentThread)))
-                               p)]
+          custom-pool-thread @(promise [resolve]
+                                (.submit ^ExecutorService custom-pool
+                                         ^Runnable #(resolve (Thread/currentThread))))]
       (dotimes [_ 100]
         (let [async-executed-on-thread (with-async-executor custom-pool
-                                         (async (Thread/currentThread)))]
-          (is (= @custom-pool-thread
-                 @async-executed-on-thread)
+                                         @(async (Thread/currentThread)))]
+          (is (= custom-pool-thread
+                 async-executed-on-thread)
               "async block is run on the custom pool"))))))
