@@ -62,13 +62,17 @@
   (defn fetch [url callback] ...)
 
   ;; can be used as
-  (let p
+  (def p
     (promise [resolve]
-      (fetch \"http://some.service.com\"
-             #(resolve %))))"
-  [[resolve] & body]
-  `(ci/promise* (fn [~resolve _#]
-                  ~@body)))
+      (fetch \"http://some.service.com\" #(resolve %))))
+
+  ;; can also be completed from outside
+  (complete (promise) :done)"
+  ([]
+   `(promise [_#]))
+  ([[resolve] & body]
+   `(ci/promise* (fn [~resolve _#]
+                   ~@body))))
 
 (defn promise?
   "Returns `true` if obj is a `CompletableFuture`."
