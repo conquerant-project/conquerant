@@ -1,7 +1,8 @@
 (ns conquerant.core-test
   (:refer-clojure :exclude [await promise])
   (:require [clojure.test :refer :all]
-            [conquerant.core :refer :all :as a]))
+            [conquerant.core :as a :refer :all])
+  (:import [java.util.concurrent Executors ExecutorService]))
 
 (deftest core-tests
   (testing "async block"
@@ -109,3 +110,18 @@
              (deref (async-countdown 5000 :passed)
                     5000
                     :failed))))))
+
+
+(deftest custom-threadpool-test
+  (testing "execution on custom threadpool"
+    (let [custom-pool (Executors/newSingleThreadExecutor)
+          custom-pool-thread (let [p (promise)]
+                               (.submit ^ExecutorService custom-pool
+                                        ^Runnable #(complete p (Thread/currentThread)))
+                               p)]
+      (dotimes [_ 100]
+        (let [async-executed-on-thread (with-async-executor custom-pool
+                                         (async (Thread/currentThread)))]
+          (is (= @custom-pool-thread
+                 @async-executed-on-thread)
+              "async block is run on the custom pool"))))))
