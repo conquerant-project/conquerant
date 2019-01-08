@@ -49,7 +49,7 @@ for concurrency that is simple *and* easy.
 ```
 
 - **`promise`**
-  - gets value/error out of callback
+  - gets value out of callback
   - returns a `CompletableFuture`
   - can be resolved from outside via `complete`
   - can be `deref`ed: `@(promise [resolve] (resolve :hi))`

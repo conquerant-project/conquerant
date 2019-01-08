@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [await promise])
   (:require [clojure.test :refer :all]
             [conquerant.core :as a :refer :all])
-  (:import [java.util.concurrent Executors ExecutorService]))
+  (:import java.util.concurrent.ForkJoinPool))
 
 (deftest core-tests
   (testing "async block"
@@ -14,11 +14,11 @@
         "async block works with do"))
 
   (testing "async fn"
-    (let [twice (async (fn [x]
-                         (* 2 x)))]
-      (is (fn? twice))
-      (is (promise? (twice 3)))
-      (is (= 6 @(twice 3)))))
+    (let [thrice (async (fn [x]
+                          (* 3 x)))]
+      (is (fn? thrice))
+      (is (promise? (thrice 3)))
+      (is (= 9 @(thrice 3)))))
 
   (testing "async defn"
     (async (defn twice [x]
@@ -114,9 +114,9 @@
 
 (deftest custom-threadpool-test
   (testing "execution on custom threadpool"
-    (let [custom-pool (Executors/newSingleThreadExecutor)
+    (let [custom-pool (ForkJoinPool. 1)
           custom-pool-thread (promise [resolve]
-                               (.submit ^ExecutorService custom-pool
+                               (.submit ^ForkJoinPool custom-pool
                                         ^Runnable #(resolve (Thread/currentThread))))
           async-executed-on-thread (with-async-executor custom-pool
                                      (async (Thread/currentThread)))]

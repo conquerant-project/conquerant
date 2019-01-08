@@ -11,9 +11,12 @@
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
 
+(defn- complete-exceptionally [^CompletableFuture promise ex]
+  (.completeExceptionally promise ex))
+
 (defn ^CompletableFuture promise* [f]
   (let [p (CompletableFuture.)
-        reject #(.completeExceptionally p %)
+        reject #(complete-exceptionally p %)
         resolve #(complete p %)]
     (CompletableFuture/runAsync #(try
                                    (f resolve reject)
@@ -33,6 +36,9 @@
                  (callback v)))]
     (.thenComposeAsync p ^Function func ^Executor *executor*)))
 
+(defn- submit [^ExecutorService pool ^Runnable task]
+  (.submit pool task))
+
 (defn then
   ([p f]
    (bind p (fn promise-wrap [in]
@@ -43,15 +49,15 @@
   ([p f timeout-ms timeout-val]
    (let [promise (CompletableFuture.)
          start-time-millis (System/currentTimeMillis)]
-     (.submit ^ExecutorService *timeout-scheduler*
-              ^Runnable #(try
-                           (let [spent-ms (- (System/currentTimeMillis)
-                                             start-time-millis)]
-                             (complete promise (deref p
-                                                      (max 0 (- timeout-ms spent-ms))
-                                                      timeout-val)))
-                           (catch Throwable e
-                             (.completeExceptionally promise e))))
+     (submit *timeout-scheduler*
+             #(try
+                (let [spent-ms (- (System/currentTimeMillis)
+                                  start-time-millis)]
+                  (complete promise (deref p
+                                           (max 0 (- timeout-ms spent-ms))
+                                           timeout-val)))
+                (catch Throwable e
+                  (complete-exceptionally promise e))))
      (then promise f))))
 
 (defn attempt [callback]
