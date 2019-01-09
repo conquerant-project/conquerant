@@ -75,10 +75,9 @@
 ;; conquerant supports switching the threadpool
 ;; on which async blocks and promises run:
 
-(letfn [(info [name]
+(letfn [(info [id]
           (locking *out*
-            (println name
-                     "running on thread:"
+            (println id "running on thread:"
                      (.getName (Thread/currentThread)))))]
   (c/async (info "async 1"))
   (c/promise [_]
