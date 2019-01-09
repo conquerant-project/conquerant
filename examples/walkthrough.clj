@@ -43,11 +43,11 @@
 ;; Here we convert our prior example to use async/await:
 
 (let [p (c/promise)]
-  (c/complete p "hello")
   (c/async (let [v (c/await p)]
-             (assert (= "hello" v)))))
+             (assert (= "hello" v))))
+  (c/complete p "hello"))
 
-;; `c/promise`s can be delivered asynchronously:
+;; `c/promise`s can be delivered from inside:
 
 (let [p (c/promise [resolve]
           (resolve "hello"))]
