@@ -65,3 +65,18 @@
 (c/async (let [p (c/promise)
                v (c/await p 1000 :not-done)]
            (assert (= :not-done v))))
+
+
+;;;; Custom Threadpools
+
+;; conquerant supports switching the threadpool
+;; on which async blocks and promises run:
+(do
+  (c/async (println "async 1 running on thread:"
+                    (.getName (Thread/currentThread))))
+  (c/with-async-executor (java.util.concurrent.ForkJoinPool. 1)
+    (c/async (println "async 2 running on thread:"
+                      (.getName (Thread/currentThread))))
+    (c/promise [_]
+      (println "promise running on thread:"
+               (.getName (Thread/currentThread))))))
