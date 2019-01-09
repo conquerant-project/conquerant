@@ -74,12 +74,17 @@
 
 ;; conquerant supports switching the threadpool
 ;; on which async blocks and promises run:
-(do
-  (c/async (println "async 1 running on thread:"
-                    (.getName (Thread/currentThread))))
+
+(letfn [(info [name]
+          (locking *out*
+            (println name
+                     "running on thread:"
+                     (.getName (Thread/currentThread)))))]
+  (c/async (info "async 1"))
+  (c/promise [_]
+    (info "promise 1"))
+
   (c/with-async-executor (java.util.concurrent.ForkJoinPool. 1)
-    (c/async (println "async 2 running on thread:"
-                      (.getName (Thread/currentThread))))
+    (c/async (info "async 2"))
     (c/promise [_]
-      (println "promise running on thread:"
-               (.getName (Thread/currentThread))))))
+      (info "promise 2"))))
