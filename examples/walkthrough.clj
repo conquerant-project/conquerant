@@ -31,7 +31,7 @@
 ;; If we try to deref an unfulfilled promise, we will block the main thread.
 
 
-;;;; Async Reads
+;;;; Async / Await
 
 ;; The `c/async` macro asynchronously executes its body on a special pool
 ;; of threads. Reads that would normally block will pause execution instead.
@@ -47,16 +47,21 @@
   (c/async (let [v (c/await p)]
              (assert (= "hello" v)))))
 
-;; Promises can also be delivered asynchronously:
+;; `c/promise`s can be delivered asynchronously:
 
 (let [p (c/promise [resolve]
           (resolve "hello"))]
   (c/async (let [v (c/await p)]
              (assert (= "hello" v)))))
 
-
-;; The async macro also returns a promise:
+;; `c/async` also returns a promise:
 
 (let [p (c/async "hello")]
   (c/async (let [v (c/await p)]
              (assert (= "hello" v)))))
+
+;; `c/await` can timeout like deref:
+
+(c/async (let [p (c/promise)
+               v (c/await p 1000 :not-done)]
+           (assert (= :not-done v))))
