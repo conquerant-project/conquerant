@@ -60,6 +60,9 @@
   (c/async (let [v (c/await p)]
              (assert (= "hello" v)))))
 
+
+;;;; Timeouts
+
 ;; `c/await` can timeout like deref:
 
 (c/async (let [p (c/promise)
