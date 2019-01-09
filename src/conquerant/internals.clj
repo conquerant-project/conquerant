@@ -1,4 +1,5 @@
 (ns conquerant.internals
+  (:require [clojure.stacktrace :as st])
   (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ExecutorService ForkJoinPool]
            java.util.function.Function))
 
@@ -12,6 +13,7 @@
   (.complete promise val))
 
 (defn- complete-exceptionally [^CompletableFuture promise ex]
+  (st/print-throwable ex)
   (.completeExceptionally promise ex))
 
 (defn ^CompletableFuture promise* [f]
@@ -45,7 +47,8 @@
              (let [out (f in)]
                (if (promise? out)
                  out
-                 (promise* out))))))
+                 (promise* (fn [resolve _]
+                             (resolve out))))))))
   ([p f timeout-ms timeout-val]
    (let [promise (CompletableFuture.)
          start-time-millis (System/currentTimeMillis)]
@@ -62,10 +65,10 @@
 
 (defn attempt [callback]
   (promise* (fn [resolve reject]
-             (let [result (callback)]
-               (if (promise? result)
-                 (then result resolve)
-                 (resolve result))))))
+              (let [result (callback)]
+                (if (promise? result)
+                  (then result resolve)
+                  (resolve result))))))
 
 (defmacro ado [& body]
   `(attempt (fn []
