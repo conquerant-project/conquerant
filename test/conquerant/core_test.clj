@@ -11,7 +11,10 @@
       (is (= :hello @x)))
 
     (is (= 1 @(async (do 1)))
-        "async block works with do"))
+        "async block works with do")
+
+    (is (thrown? Exception @(async (throw (Exception.))))
+        "exceptions bubble up like in future"))
 
   (testing "async fn"
     (let [thrice (async (fn [x]
