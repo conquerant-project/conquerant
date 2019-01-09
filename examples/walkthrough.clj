@@ -34,7 +34,7 @@
 ;;;; Async / Await
 
 ;; The `c/async` macro asynchronously executes its body on a special pool
-;; of threads. Reads that would normally block will pause execution instead.
+;; of threads. Reads that normally block will pause execution instead.
 
 ;; This mechanism encapsulates the inversion of control that is external
 ;; in event/callback systems.
