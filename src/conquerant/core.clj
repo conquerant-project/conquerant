@@ -68,6 +68,7 @@
 
   ;; can also be completed from outside
   (complete (promise) :done)"
+  {:style/indent 1}
   ([]
    `(promise [_#]))
   ([[resolve] & body]
