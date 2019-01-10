@@ -12,18 +12,18 @@
 (defn chan []
   (LinkedBlockingQueue.))
 
-(defn put! [^LinkedBlockingQueue ch x]
-  (c/with-async-executor take-put-executor
-    (c/async
-     (when-not (.offer ch x (rand-wait-ms) TimeUnit/MILLISECONDS)
-       (put! ch x)))))
-
 (defn take! [^LinkedBlockingQueue ch]
   (c/with-async-executor take-put-executor
     (c/async
      (if-let [x (.poll ch (rand-wait-ms) TimeUnit/MILLISECONDS)]
        x
        (take! ch)))))
+
+(defn put! [^LinkedBlockingQueue ch x]
+  (c/with-async-executor take-put-executor
+    (c/async
+     (when-not (.offer ch x (rand-wait-ms) TimeUnit/MILLISECONDS)
+       (put! ch x)))))
 
 
 (comment
