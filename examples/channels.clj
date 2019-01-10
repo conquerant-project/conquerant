@@ -25,6 +25,7 @@
        x
        (take! ch)))))
 
+
 (defn run-test []
   (let [c (chan)]
     (dotimes [i 100]
