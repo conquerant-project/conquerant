@@ -6,15 +6,15 @@
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
-(defonce ^:dynamic *timeout-scheduler*
-  (Executors/newSingleThreadExecutor))
+(defonce ^:dynamic *timeout-executor*
+  (Executors/newWorkStealingPool))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
 
 (defn- complete-exceptionally [^CompletableFuture promise ex]
-  (st/print-throwable ex)
-  (.completeExceptionally promise ex))
+  (.completeExceptionally promise ex)
+  (st/print-stack-trace ex))
 
 (defn ^CompletableFuture promise* [f]
   (let [p (CompletableFuture.)
@@ -38,8 +38,13 @@
                  (callback v)))]
     (.thenComposeAsync p ^Function func ^Executor *executor*)))
 
-(defn- submit [^ExecutorService pool ^Runnable task]
-  (.submit pool task))
+(defn- timeout [start-ms timeout-ms]
+  (let [spent-ms (- (System/currentTimeMillis) start-ms)
+        remaining-ms (max (- timeout-ms spent-ms) 0)
+        wait-range-ms (+ 3 (rand-int 2))
+        wait-ms (min remaining-ms wait-range-ms)
+        pending-ms (- remaining-ms wait-ms)]
+    [wait-ms pending-ms]))
 
 (defn then
   ([p f]
@@ -50,17 +55,23 @@
                  (promise* (fn [resolve _]
                              (resolve out))))))))
   ([p f timeout-ms timeout-val]
-   (let [promise (CompletableFuture.)
-         start-time-millis (System/currentTimeMillis)]
-     (submit *timeout-scheduler*
-             #(try
-                (let [spent-ms (- (System/currentTimeMillis)
-                                  start-time-millis)]
-                  (complete promise (deref p
-                                           (max 0 (- timeout-ms spent-ms))
-                                           timeout-val)))
-                (catch Throwable e
-                  (complete-exceptionally promise e))))
+   (let [start-ms (System/currentTimeMillis)
+         promise (CompletableFuture.)]
+     (CompletableFuture/runAsync #(try
+                                    (let [[wait-ms pending-ms] (timeout start-ms timeout-ms)
+                                          v (deref p wait-ms ::timeout)]
+                                      (if (= v ::timeout)
+                                        (if (pos? pending-ms)
+                                          (then p
+                                                (fn [x]
+                                                  (complete promise x))
+                                                pending-ms
+                                                timeout-val)
+                                          (complete promise timeout-val))
+                                        (complete promise v)))
+                                    (catch Throwable e
+                                      (complete-exceptionally promise e)))
+                                 *timeout-executor*)
      (then promise f))))
 
 (defn attempt [callback]
