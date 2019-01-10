@@ -1,9 +1,9 @@
 (ns channels
   (:require [conquerant.core :as c])
-  (:import [java.util.concurrent ForkJoinPool LinkedBlockingQueue TimeUnit]))
+  (:import [java.util.concurrent Executors LinkedBlockingQueue TimeUnit]))
 
 (defonce ^:private take-put-executor
-  (ForkJoinPool. 1))
+  (Executors/newSingleThreadExecutor))
 
 (defn- rand-wait-ms []
   (+ 3 (rand-int 2)))
