@@ -1,20 +1,20 @@
 (ns conquerant.internals
   (:require [clojure.stacktrace :as st])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ExecutorService ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
 (defonce ^:dynamic *timeout-executor*
-  (Executors/newWorkStealingPool))
+  (Executors/newSingleThreadExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
 
 (defn- complete-exceptionally [^CompletableFuture promise ex]
   (.completeExceptionally promise ex)
-  (st/print-stack-trace ex))
+  (st/print-stack-trace ex 1))
 
 (defn ^CompletableFuture promise* [f]
   (let [p (CompletableFuture.)
