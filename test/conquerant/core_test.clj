@@ -13,7 +13,8 @@
     (is (= 1 @(async (do 1)))
         "async block works with do")
 
-    (is (thrown? Exception @(async (throw (Exception.))))
+    (is (thrown? Exception
+                 @(async (throw (Exception. "expected failure"))))
         "exceptions bubble up like in future"))
 
   (testing "async fn"
@@ -36,8 +37,9 @@
 
     @(async (let [s1 "hello"
                   s2 (async (reverse s1))
-                  s3 (await s2)]
-              (is (= @s2 s3))))
+                  s3 (await s2)
+                  s4 s3]
+              (is (= @s2 s4))))
 
     @(async (is (promise? (let [a (async 1)
                                 b (await a)]
@@ -56,10 +58,9 @@
 
     @(async
       (let [p (promise)
-            x (await p 1000 5)
-            y x]
-        (is (= 5 y)
-            "await can timeout like deref")))
+            x (await p 1000 5)]
+        (is (= 5 x)
+             "await can timeout like deref")))
 
     @(async
       (let [a (async 1)
