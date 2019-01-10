@@ -2,15 +2,15 @@
   (:require [conquerant.core :as c])
   (:import [java.util.concurrent ForkJoinPool LinkedBlockingQueue TimeUnit]))
 
+(defonce ^:private take-put-executor
+  (ForkJoinPool. 1))
+
+(defn- rand-wait-ms []
+  (+ 3 (rand-int 2)))
+
+
 (defn chan []
   (LinkedBlockingQueue.))
-
-(let [wait-range-ms (range 3 7)]
-  (defn rand-wait-ms []
-    (rand-nth wait-range-ms)))
-
-(defonce take-put-executor
-  (ForkJoinPool. 1))
 
 (defn put! [^LinkedBlockingQueue ch x]
   (c/with-async-executor take-put-executor
