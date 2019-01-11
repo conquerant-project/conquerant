@@ -41,7 +41,7 @@
 (defn- timeout [start-ms timeout-ms]
   (let [spent-ms (- (System/currentTimeMillis) start-ms)
         remaining-ms (max (- timeout-ms spent-ms) 0)
-        wait-range-ms (+ 3 (rand-int 2))
+        wait-range-ms (+ 2 (rand-int 4))
         wait-ms (min remaining-ms wait-range-ms)
         pending-ms (- remaining-ms wait-ms)]
     [wait-ms pending-ms]))
