@@ -1,43 +1,40 @@
 (ns channels
-  (:require [conquerant.core :as c])
-  (:import [java.util.concurrent Executors LinkedBlockingQueue TimeUnit]))
+  (:require [conquerant.core :as c]
+            [conquerant.internals :as ci])
+  (:import [java.util.concurrent BlockingQueue LinkedBlockingQueue TimeUnit]))
 
-(defonce ^:private take-put-executor
-  (Executors/newSingleThreadExecutor))
-
-(defn- rand-wait-ms []
-  (+ 3 (rand-int 2)))
-
+(defn int-in [min max]
+  (+ min (rand-int max) 1))
 
 (defn chan []
   (LinkedBlockingQueue.))
 
-(defn take! [^LinkedBlockingQueue ch]
-  (c/with-async-executor take-put-executor
+(defn take! [^BlockingQueue ch]
+  (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (if-let [x (.poll ch (rand-wait-ms) TimeUnit/MILLISECONDS)]
+     (if-let [x (.poll ch (int-in 3 7) TimeUnit/MILLISECONDS)]
        x
        (take! ch)))))
 
-(defn put! [^LinkedBlockingQueue ch x]
-  (c/with-async-executor take-put-executor
+(defn put! [^BlockingQueue ch x]
+  (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (when-not (.offer ch x (rand-wait-ms) TimeUnit/MILLISECONDS)
+     (when-not (.offer ch x (int-in 3 7) TimeUnit/MILLISECONDS)
        (put! ch x)))))
 
-(defn alts! [^LinkedBlockingQueue ch1 ^LinkedBlockingQueue ch2]
-  (c/with-async-executor take-put-executor
+(defn alts! [^BlockingQueue ch1 ^BlockingQueue ch2]
+  (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (if-let [x (.poll ch1 (rand-wait-ms) TimeUnit/MILLISECONDS)]
+     (if-let [x (.poll ch1 (int-in 3 7) TimeUnit/MILLISECONDS)]
        [ch1 x]
        (alts! ch2 ch1)))))
 
 (defn timeout! [ms]
-  (let [c (chan)
-        p (c/promise)]
-    (c/async (let [_ (c/await p ms nil)]
-               (put! c ::timeout)))
-    c))
+  (let [ch (chan)
+        pr (c/promise)]
+    (c/async (let [_ (c/await pr ms nil)]
+               (put! ch ::timeout)))
+    ch))
 
 
 (comment
