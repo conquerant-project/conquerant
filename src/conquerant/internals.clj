@@ -17,10 +17,12 @@
   (st/print-stack-trace ex 1))
 
 (defn ^CompletableFuture promise* [f]
-  (let [p (CompletableFuture.)
+  (let [binds (clojure.lang.Var/getThreadBindingFrame)
+        p (CompletableFuture.)
         reject #(complete-exceptionally p %)
         resolve #(complete p %)]
     (CompletableFuture/runAsync #(try
+                                   (clojure.lang.Var/resetThreadBindingFrame binds)
                                    (f resolve reject)
                                    (catch Throwable e
                                      (reject e)))
