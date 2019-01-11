@@ -25,15 +25,15 @@
      (when-not (.offer ch x (rand-wait-ms) TimeUnit/MILLISECONDS)
        (put! ch x)))))
 
-(defn alt! [^LinkedBlockingQueue ch1 ^LinkedBlockingQueue ch2]
+(defn alts! [^LinkedBlockingQueue ch1 ^LinkedBlockingQueue ch2]
   (c/with-async-executor take-put-executor
     (c/async
      (if-let [x (.poll ch1 (rand-wait-ms) TimeUnit/MILLISECONDS)]
        [ch1 x]
-       (alt! ch2 ch1)))))
+       (alts! ch2 ch1)))))
 
 
-(comment
+(comment "TESTS"
   (def c (chan))
 
   (dotimes [i 100]
@@ -50,7 +50,7 @@
 
   ((fn loop []
      (c/async
-      (let [[ch x] (c/await (alt! d e))]
+      (let [[ch x] (c/await (alts! d e))]
         (println x)
         (loop)))))
 
