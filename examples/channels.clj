@@ -45,7 +45,6 @@
 
 
   (def d (chan))
-
   (def e (chan))
 
   ((fn loop []
@@ -54,4 +53,6 @@
         (println x)
         (loop)))))
 
-  (put! d :d))
+  (put! d :d)
+
+  (put! e :e))
