@@ -3,8 +3,8 @@
             [conquerant.internals :as ci])
   (:import [java.util.concurrent BlockingQueue LinkedBlockingQueue TimeUnit]))
 
-(defn int-in [from to]
-  (+ from (rand-int (inc (- to from)))))
+(defn int-in [min max]
+  (rand-nth (range min (inc max))))
 
 (defn chan []
   (LinkedBlockingQueue.))
