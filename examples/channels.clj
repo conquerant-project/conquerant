@@ -32,8 +32,18 @@
        [ch1 x]
        (alts! ch2 ch1)))))
 
+(defn timeout! [ms]
+  (let [c (chan)
+        p (c/promise)]
+    (c/async (let [_ (c/await p ms nil)]
+               (put! c ::timeout)))
+    c))
 
-(comment "TESTS"
+
+(comment
+
+  ;; take! and put!
+  ;; ==============
   (def c (chan))
 
   (dotimes [i 100]
@@ -44,15 +54,15 @@
     (put! c :hi))
 
 
+  ;; timeout!
+  ;; ========
+  @(take! (timeout! 100))
+
+
+  ;; alts!
+  ;; =====
   (def d (chan))
-  (def e (chan))
 
-  ((fn loop []
-     (c/async
-      (let [[ch x] (c/await (alts! d e))]
-        (println x)
-        (loop)))))
-
-  (put! d :d)
-
-  (put! e :e))
+  (c/async
+   (let [[ch x] (c/await (alts! d (timeout! 5000)))]
+     (println x))))
