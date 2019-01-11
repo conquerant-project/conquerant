@@ -25,6 +25,13 @@
      (when-not (.offer ch x (rand-wait-ms) TimeUnit/MILLISECONDS)
        (put! ch x)))))
 
+(defn alt! [^LinkedBlockingQueue ch1 ^LinkedBlockingQueue ch2]
+  (c/with-async-executor take-put-executor
+    (c/async
+     (if-let [x (.poll ch1 (rand-wait-ms) TimeUnit/MILLISECONDS)]
+       [ch1 x]
+       (alt! ch2 ch1)))))
+
 
 (comment
   (def c (chan))
@@ -34,4 +41,17 @@
                (println x))))
 
   (dotimes [i 100]
-    (put! c :hi)))
+    (put! c :hi))
+
+
+  (def d (chan))
+
+  (def e (chan))
+
+  ((fn loop []
+     (c/async
+      (let [[ch x] (c/await (alt! d e))]
+        (println x)
+        (loop)))))
+
+  (put! d :d))
