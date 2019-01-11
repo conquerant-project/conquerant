@@ -52,7 +52,7 @@
   ([promise]
    (await promise nil nil))
   ([promise timeout-ms timeout-val]
-   (throw (Exception. "await used outside async let block!"))))
+   (throw (Exception. "await used outside async let bindings!"))))
 
 (defmacro promise
   "Used to get values out of callbacks.
