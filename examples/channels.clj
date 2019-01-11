@@ -12,20 +12,20 @@
 (defn take! [^BlockingQueue ch]
   (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (if-let [x (.poll ch (int-in 3 7) TimeUnit/MILLISECONDS)]
+     (if-let [x (.poll ch (int-in 1 3) TimeUnit/MILLISECONDS)]
        x
        (take! ch)))))
 
 (defn put! [^BlockingQueue ch x]
   (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (when-not (.offer ch x (int-in 3 7) TimeUnit/MILLISECONDS)
+     (when-not (.offer ch x (int-in 1 3) TimeUnit/MILLISECONDS)
        (put! ch x)))))
 
 (defn alts! [^BlockingQueue ch1 ^BlockingQueue ch2]
   (c/with-async-executor ci/*timeout-executor*
     (c/async
-     (if-let [x (.poll ch1 (int-in 3 7) TimeUnit/MILLISECONDS)]
+     (if-let [x (.poll ch1 (int-in 1 3) TimeUnit/MILLISECONDS)]
        [ch1 x]
        (alts! ch2 ch1)))))
 
