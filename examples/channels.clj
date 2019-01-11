@@ -47,8 +47,8 @@
   (def d (chan))
   (def e (chan))
 
-  ((c/async
-    (fn loop []
+  ((fn loop []
+     (c/async
       (let [[ch x] (c/await (alts! d e))]
         (println x)
         (loop)))))
