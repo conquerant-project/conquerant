@@ -49,9 +49,9 @@
 
   Will wait for the `CompletableFuture` to complete
   before evaluation resumes."
-  ([v]
-   (await v nil nil))
-  ([v timeout-ms timeout-val]
+  ([promise]
+   (await promise nil nil))
+  ([promise timeout-ms timeout-val]
    (throw (Exception. "await used outside async let block!"))))
 
 (defmacro promise
