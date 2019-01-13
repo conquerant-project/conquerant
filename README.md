@@ -77,6 +77,9 @@ for concurrency that is simple *and* easy.
   - works across function boundaries
   - can timeout like `deref`: `(await p 1000 :timeout)`
 
+- **`channels`**
+  - supports `core.async`-like [channel operations](test/conquerant/channels_test.clj)!
+
 ## Walkthrough
 
 Clone this repo, fire up a REPL, and walk through the [conquerant walkthrough](examples/walkthrough.clj).
