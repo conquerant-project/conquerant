@@ -16,19 +16,6 @@
   (.completeExceptionally promise ex)
   (st/print-stack-trace ex 1))
 
-(defn ^CompletableFuture promise* [f]
-  (let [binds (clojure.lang.Var/getThreadBindingFrame)
-        p (CompletableFuture.)
-        reject #(complete-exceptionally p %)
-        resolve #(complete p %)]
-    (CompletableFuture/runAsync #(try
-                                   (clojure.lang.Var/resetThreadBindingFrame binds)
-                                   (f resolve reject)
-                                   (catch Throwable e
-                                     (reject e)))
-                                *executor*)
-    p))
-
 (defn promise? [v]
   (instance? CompletionStage v))
 
@@ -39,6 +26,22 @@
                  (clojure.lang.Var/resetThreadBindingFrame binds)
                  (callback v)))]
     (.thenComposeAsync p ^Function func ^Executor *executor*)))
+
+(defn ^CompletableFuture promise* [f]
+  (let [binds (clojure.lang.Var/getThreadBindingFrame)
+        p (CompletableFuture.)
+        reject #(complete-exceptionally p %)
+        resolve (fn [res]
+                  (if (promise? res)
+                    (bind res #(complete p %))
+                    (complete p res)))]
+    (CompletableFuture/runAsync #(try
+                                   (clojure.lang.Var/resetThreadBindingFrame binds)
+                                   (f resolve reject)
+                                   (catch Throwable e
+                                     (reject e)))
+                                *executor*)
+    p))
 
 (defn schedule [f]
   (.schedule ^ScheduledExecutorService *timeout-executor*
