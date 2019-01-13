@@ -25,7 +25,8 @@
 
   (testing "alts!"
     (let [c (cc/chan)
+          d (cc/chan)
           t (cc/timeout 1000)
-          [ch x] @(cc/alts! [c t])]
+          [ch x] @(cc/alts! [c t d])]
       (is (= ch t))
       (is (= x ::cc/timeout)))))
