@@ -36,9 +36,14 @@
   (let [[ch] chans]
     (c/promise [resolve]
       (ci/schedule
-       #(if-let [x (.poll ch)]
-          (resolve [ch x])
-          (resolve (alts! (rest (cycle chans)))))))))
+       #(let [done? (volatile! false)]
+          (doseq [^BlockingQueue ch chans
+                  :while (not @done?)]
+            (when-let [x (.poll ch)]
+              (resolve [ch x])
+              (vreset! done? true)))
+          (when-not @done?
+            (resolve (alts! chans))))))))
 
 (defn timeout
   "Returns a `chan` that will eventually have

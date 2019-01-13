@@ -3,7 +3,7 @@
             [conquerant.channels :as cc]
             [clojure.test :refer :all]))
 
-(deftest chan-tests
+(deftest channel-tests
   (testing "take! and put!"
     (let [c (cc/chan)
           counter (atom 0)]
