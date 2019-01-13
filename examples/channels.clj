@@ -10,24 +10,23 @@
   (LinkedBlockingQueue.))
 
 (defn take! [^BlockingQueue ch]
-  (c/with-async-executor ci/*timeout-executor*
-    (c/async
-     (if-let [x (.poll ch (int-in 2 5) TimeUnit/MILLISECONDS)]
-       x
-       (take! ch)))))
+  (c/promise [resolve]
+    (ci/schedule
+     #(resolve (or (.poll ch)
+                   (take! ch))))))
 
 (defn put! [^BlockingQueue ch x]
-  (c/with-async-executor ci/*timeout-executor*
-    (c/async
-     (when-not (.offer ch x (int-in 2 5) TimeUnit/MILLISECONDS)
-       (put! ch x)))))
+  (c/promise [resolve]
+    (ci/schedule
+     #(resolve (or (.offer ch x)
+                   (put! ch x))))))
 
-(defn alts! [^BlockingQueue ch1 ^BlockingQueue ch2]
-  (c/with-async-executor ci/*timeout-executor*
-    (c/async
-     (if-let [x (.poll ch1 (int-in 2 5) TimeUnit/MILLISECONDS)]
-       [ch1 x]
-       (alts! ch2 ch1)))))
+(defn alts! [[ch & chans :as all-chans]]
+  (c/promise [resolve]
+    (ci/schedule
+     #(if-let [x (.poll ch)]
+        (resolve [ch x])
+        (resolve (alts! (rest (cycle all-chans))))))))
 
 (defn timeout! [ms]
   (let [ch (chan)
@@ -53,7 +52,7 @@
 
   ;; timeout!
   ;; ========
-  @(take! (timeout! 100))
+  @(take! (timeout! 1000))
 
 
   ;; alts!
@@ -61,7 +60,7 @@
   (def d (chan))
 
   (c/async
-   (let [[ch x] (c/await (alts! d (timeout! 5000)))]
+   (let [[ch x] (c/await (alts! [d (timeout! 5000)]))]
      (println x)))
 
   (put! d :hi))
