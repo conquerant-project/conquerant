@@ -40,11 +40,11 @@
           (resolve [ch x])
           (resolve (alts! (rest (cycle chans)))))))))
 
-(defn timeout!
+(defn timeout
   "Returns a `chan` that will eventually have
   timeout-val (or `::timeout`) after timeout-ms."
   ([timeout-ms]
-   (timeout! timeout-ms ::timeout))
+   (timeout timeout-ms ::timeout))
   ([timeout-ms timeout-val]
    (let [ch (chan)
          pr (c/promise)]

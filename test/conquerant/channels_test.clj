@@ -17,7 +17,7 @@
 
   (testing "timeout!"
     (let [start-ms (System/currentTimeMillis)
-          res @(cc/take! (cc/timeout! 1000 :some-val))
+          res @(cc/take! (cc/timeout 1000 :some-val))
           end-ms (System/currentTimeMillis)
           wait-ms (- end-ms start-ms)]
       (is (= :some-val res))
@@ -25,7 +25,7 @@
 
   (testing "alts!"
     (let [c (cc/chan)
-          t (cc/timeout! 1000)
+          t (cc/timeout 1000)
           [ch x] @(cc/alts! [c t])]
       (is (= ch t))
       (is (= x ::cc/timeout)))))
