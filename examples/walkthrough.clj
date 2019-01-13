@@ -1,8 +1,6 @@
 ;; This walkthrough introduces the core concepts of conquerant.
 ;; It is inspired by and roughly mimics the core.async walkthrough.
 
-;; The conquerant.core namespace contains the public API.
-
 (require '[conquerant.core :as c])
 
 

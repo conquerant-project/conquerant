@@ -1,4 +1,4 @@
-(ns channels
+(ns conquerant.channels
   (:require [conquerant.core :as c]
             [conquerant.internals :as ci])
   (:import [java.util.concurrent BlockingQueue LinkedBlockingQueue TimeUnit]))
