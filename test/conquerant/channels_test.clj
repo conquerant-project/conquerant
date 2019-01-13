@@ -21,7 +21,7 @@
           end-ms (System/currentTimeMillis)
           wait-ms (- end-ms start-ms)]
       (is (= :some-val res))
-      (is (< 900 wait-ms 1100))))
+      (is (< 800 wait-ms 1200))))
 
   (testing "alts!"
     (let [c (cc/chan)
