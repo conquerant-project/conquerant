@@ -60,7 +60,13 @@
       (let [p (promise)
             x (await p 1000 5)]
         (is (= 5 x)
-             "await can timeout like deref")))
+            "await can timeout like deref")))
+
+    @(async
+      (let [p (async 1)
+            x (await p 1000 :timeout)]
+        (is (= 1 x)
+            "timeouts are ignored if promise is complete")))
 
     @(async
       (let [a (async 1)
@@ -80,7 +86,13 @@
       (complete p 1)
       @(async (let [x (await p)]
                 (is (= 1 x))))
-      (is (= 1 @p))))
+      (is (= 1 @p)))
+
+    (let [p1 (async 1)
+          p2 (promise [resolve]
+               (resolve p1))]
+      (is (= 1 @p2)
+          "resolve unwraps promise")))
 
   (testing "crossing fn boundaries"
     (async
