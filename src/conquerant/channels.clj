@@ -48,6 +48,6 @@
   ([timeout-ms timeout-val]
    (let [ch (chan)
          pr (c/promise)]
-     (c/async (let [_ (c/await pr timeout-ms nil)]
-                (put! ch val)))
+     (c/async (let [res (c/await pr timeout-ms timeout-val)]
+                (put! ch res)))
      ch)))
