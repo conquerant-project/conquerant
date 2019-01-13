@@ -33,17 +33,16 @@
   where ch is the first chan out of chans to give a value,
   and x is the value received from ch."
   [chans]
-  (let [[ch] chans]
-    (c/promise [resolve]
-      (ci/schedule
-       #(let [done? (volatile! false)]
-          (doseq [^BlockingQueue ch chans
-                  :while (not @done?)]
-            (when-let [x (.poll ch)]
-              (resolve [ch x])
-              (vreset! done? true)))
-          (when-not @done?
-            (resolve (alts! chans))))))))
+  (c/promise [resolve]
+    (ci/schedule
+     #(let [done? (volatile! false)]
+        (doseq [^BlockingQueue ch chans
+                :while (not @done?)]
+          (when-let [x (.poll ch)]
+            (resolve [ch x])
+            (vreset! done? true)))
+        (when-not @done?
+          (resolve (alts! chans)))))))
 
 (defn timeout
   "Returns a `chan` that will eventually have
