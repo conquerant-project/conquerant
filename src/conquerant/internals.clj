@@ -1,13 +1,13 @@
 (ns conquerant.internals
   (:require [clojure.stacktrace :as st])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool]
+  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService TimeUnit]
            java.util.function.Function))
 
 (defonce ^:dynamic *executor*
   (ForkJoinPool/commonPool))
 
 (defonce ^:dynamic *timeout-executor*
-  (Executors/newSingleThreadExecutor))
+  (Executors/newSingleThreadScheduledExecutor))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
@@ -40,13 +40,11 @@
                  (callback v)))]
     (.thenComposeAsync p ^Function func ^Executor *executor*)))
 
-(defn- timeout [start-ms timeout-ms]
-  (let [spent-ms (- (System/currentTimeMillis) start-ms)
-        remaining-ms (max (- timeout-ms spent-ms) 0)
-        wait-range-ms (+ 3 (rand-int 2))
-        wait-ms (min remaining-ms wait-range-ms)
-        pending-ms (- remaining-ms wait-ms)]
-    [wait-ms pending-ms]))
+(defn schedule [f]
+  (.schedule ^ScheduledExecutorService *timeout-executor*
+             ^Callable f
+             (+ 2 (rand-int 4))
+             TimeUnit/MILLISECONDS))
 
 (defn then
   ([p f]
@@ -57,23 +55,28 @@
                  (promise* (fn [resolve _]
                              (resolve out))))))))
   ([p f timeout-ms timeout-val]
-   (let [start-ms (System/currentTimeMillis)
-         promise (CompletableFuture.)]
-     (CompletableFuture/runAsync #(try
-                                    (let [[wait-ms pending-ms] (timeout start-ms timeout-ms)
-                                          v (deref p wait-ms ::timeout)]
-                                      (if (= v ::timeout)
-                                        (if (pos? pending-ms)
-                                          (then p
-                                                (fn [x]
-                                                  (complete promise x))
-                                                pending-ms
-                                                timeout-val)
-                                          (complete promise timeout-val))
-                                        (complete promise v)))
-                                    (catch Throwable e
-                                      (complete-exceptionally promise e)))
-                                 *timeout-executor*)
+   (let [promise (CompletableFuture.)
+         start-ms (System/currentTimeMillis)]
+     (schedule
+      (fn []
+        (let [now-ms (System/currentTimeMillis)
+              spent-ms (- now-ms start-ms)
+              pending-ms (- timeout-ms spent-ms)]
+          (cond
+            (.isDone ^CompletableFuture p)
+            (try
+              (complete promise @p)
+              (catch Exception e
+                (complete-exceptionally promise e)))
+
+            (pos? pending-ms)
+            (then p
+                  #(complete promise %)
+                  pending-ms
+                  timeout-val)
+
+            :else
+            (complete promise timeout-val)))))
      (then promise f))))
 
 (defn attempt [callback]
