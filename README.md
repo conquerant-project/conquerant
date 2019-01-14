@@ -56,6 +56,7 @@ for concurrency that is simple *and* easy.
   - can run on a custom `ExecutorService` using `with-async-executor`
 
 - **`async`**
+  - runs body on a lightweight thread
   - returns a `CompletableFuture`, like `promise`
   - can wrap
     - `defn` and `fn` forms - supports variadic versions
@@ -73,6 +74,7 @@ for concurrency that is simple *and* easy.
   - can run on a custom `ExecutorService` using `with-async-executor`
 
 - **`await`**
+  - pauses the lightweight thread till the given promise is complete
   - can only be used in `async` `let` bindings
     - normal `let` block anywhere inside an `async` block
     - every `let` block with a call to `await` returns a `CompletableFuture`
