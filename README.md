@@ -50,7 +50,7 @@ for concurrency that is simple *and* easy.
 
 - **`promise`**
   - gets value out of callback
-  - returns a `CompletableFuture`
+  - runs body on a lightweight thread, returning a `CompletableFuture`
   - can be resolved from outside via `complete`
   - can be `deref`ed: `@(promise [resolve] (resolve :hi))`
   - can run on a custom `ExecutorService` using `with-async-executor`
