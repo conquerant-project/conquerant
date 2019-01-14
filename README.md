@@ -56,6 +56,7 @@ for concurrency that is simple *and* easy.
   - can run on a custom `ExecutorService` using `with-async-executor`
 
 - **`async`**
+  - returns a `CompletableFuture`, like `promise`
   - can wrap
     - `defn` and `fn` forms - supports variadic versions
     ```clojure
