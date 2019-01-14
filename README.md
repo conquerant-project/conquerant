@@ -57,9 +57,7 @@ for concurrency that is simple *and* easy.
 
 - **`async`**
   - runs body on a lightweight thread
-  - returns a `CompletableFuture`, like `promise`
-  - can wrap
-    - `defn` and `fn` forms - supports variadic versions
+    - can wrap `defn` and `fn` forms - supports variadic versions
     ```clojure
     (async (defn f
              ([a]
