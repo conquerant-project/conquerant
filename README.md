@@ -9,9 +9,9 @@ for concurrency that is simple *and* easy.
 
 ## Why
 
-`core.async` is very powerful, but quite low-level by design
-- it allows for a very flexible style of writing concurrent code
-- but has a huge surface area, and can be daunting to learn
+**`core.async`**
+- is very powerful, but quite low-level by design
+- and the source is hard to follow
 - we don't always want this kind of power
 - doesn't allow using [custom threadpools](https://dev.clojure.org/jira/browse/ASYNC-94)
 - breaks on [function boundaries](https://github.com/clojure/core.async/wiki/Go-Block-Best-Practices)
@@ -53,6 +53,7 @@ for concurrency that is simple *and* easy.
   - returns a `CompletableFuture`
   - can be resolved from outside via `complete`
   - can be `deref`ed: `@(promise [resolve] (resolve :hi))`
+  - can run on a custom `ExecutorService` using `with-async-executor`
 
 - **`async`**
   - can wrap

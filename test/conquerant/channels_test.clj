@@ -15,7 +15,7 @@
       (Thread/sleep 1000)
       (is (= 100 @counter))))
 
-  (testing "timeout!"
+  (testing "timeout"
     (let [start-ms (System/currentTimeMillis)
           res @(cc/take! (cc/timeout 1000 :some-val))
           end-ms (System/currentTimeMillis)

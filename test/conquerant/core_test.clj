@@ -134,8 +134,15 @@
           custom-pool-thread (promise [resolve]
                                (.submit ^ForkJoinPool custom-pool
                                         ^Runnable #(resolve (Thread/currentThread))))
+          promise-executed-on-thread (with-async-executor custom-pool
+                                       (promise [resolve]
+                                         (resolve (Thread/currentThread))))
           async-executed-on-thread (with-async-executor custom-pool
                                      (async (Thread/currentThread)))]
+      (is (= @custom-pool-thread
+             @promise-executed-on-thread)
+          "promise runs on the custom pool")
+
       (is (= @custom-pool-thread
              @async-executed-on-thread)
           "async block runs on the custom pool"))))
