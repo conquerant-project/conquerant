@@ -1,13 +1,66 @@
 (ns conquerant.internals
   (:require [clojure.stacktrace :as st])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService TimeUnit]
+  (:import [java.lang.reflect Method]
+           [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService ThreadFactory TimeUnit]
            java.util.function.Function))
 
+(defn- has-method?
+  "Checks if a class has certain method"
+  [klass name]
+  (let [methods (into #{}
+                      (map (fn [method] (.getName ^Method method)))
+                      (.getDeclaredMethods ^Class klass))]
+    (contains? methods name)))
+
+(defn- maybe-deref
+  "Derefs a delay object else returns object itself"
+  [o]
+  (if (delay? o)
+    (deref o)
+    o))
+
+(defn- virtual-thread-factory
+  ^ThreadFactory
+  [^String name]
+  (-> (Thread/ofVirtual)
+      (.name name 0)
+      (.allowSetThreadLocals true)
+      .factory))
+
+(def vthreads-supported?
+  "A var that indicates if virtual threads are supported or not in the current runtime."
+  (and (has-method? Thread "startVirtualThread")
+       (try
+         (eval '(Thread/startVirtualThread (constantly nil)))
+         true
+         (catch Throwable cause
+           false))))
+
+(defonce
+  ^{:doc "A global, virtual thread per task executor service."
+    :no-doc true}
+  default-vthread-executor
+  (delay (when vthreads-supported?
+           (eval '(-> (virtual-thread-factory "dispatch-virtual-thread-")
+                      (Executors/newThreadPerTaskExecutor))))))
+
+(defonce
+  ^{:doc "A global, virtual thread per task scheduled executor service."
+    :no-doc true}
+  default-vthread-scheduled-executor
+  (delay (when vthreads-supported?
+           (eval '(-> (virtual-thread-factory "scheduled-dispatch-virtual-thread-")
+                      (Executors/newSingleThreadScheduledExecutor))))))
+
 (defonce ^:dynamic *executor*
-  (ForkJoinPool/commonPool))
+  (if vthreads-supported?
+    (maybe-deref default-vthread-executor)
+    (ForkJoinPool/commonPool)))
 
 (defonce ^:dynamic *timeout-executor*
-  (Executors/newSingleThreadScheduledExecutor))
+  (if vthreads-supported?
+    (maybe-deref default-vthread-scheduled-executor)
+    (Executors/newSingleThreadScheduledExecutor)))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
