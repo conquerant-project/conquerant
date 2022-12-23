@@ -1,7 +1,7 @@
 (ns conquerant.internals
   (:require [clojure.stacktrace :as st])
   (:import [java.lang.reflect Method]
-           [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService ThreadFactory TimeUnit]
+           [java.util.concurrent CompletableFuture CompletionStage Executor ExecutorService Executors ForkJoinPool ScheduledExecutorService ThreadFactory TimeUnit]
            java.util.function.Function))
 
 (defn- has-method?
@@ -19,21 +19,30 @@
     (deref o)
     o))
 
-(defn- virtual-thread-factory
-  ^ThreadFactory
-  [^String name]
-  (-> (Thread/ofVirtual)
-      (.name name 0)
-      (.allowSetThreadLocals true)
-      .factory))
+(defn- virtual-thread-executor-service
+  "This should be changed to standard Java Executors and Thread class interop when the library only support JDK 19 +.
+  Currently, this is implemented using reflect library to enable Native image build on Graal
+  clojure fn eval breaks Graal native images due to Dynamic class loading"
+  ^ExecutorService
+  []
+  (let [^Method new-thread-per-task-executor-method (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))]
+    (.invoke ^Method new-thread-per-task-executor-method nil (make-array Object 0))))
 
 (def vthreads-supported?
-  "A var that indicates if virtual threads are supported or not in the current runtime."
+  "A var that indicates if virtual threads are supported or not in the current runtime.
+  This should be changed to standard Java Thread class interop when the library only support JDK 19 +.
+  Currently, this is implemented using reflection to enable Native image build on Graal
+  clojure fn eval breaks Graal native images due to Dynamic class loading"
   (and (has-method? Thread "startVirtualThread")
+       (has-method? Thread "ofVirtual")
+       (has-method? Executors "newVirtualThreadPerTaskExecutor")
        (try
-         (eval '(Thread/startVirtualThread (constantly nil)))
+         (.invoke
+           (.getDeclaredMethod Thread "ofVirtual" (make-array Class 0))
+           nil
+           (make-array Object 0))
          true
-         (catch Throwable cause
+         (catch Exception ex
            false))))
 
 (defonce
@@ -41,23 +50,23 @@
     :no-doc true}
   default-vthread-executor
   (delay (when vthreads-supported?
-           (eval '(-> (virtual-thread-factory "dispatch-virtual-thread-")
-                      (Executors/newThreadPerTaskExecutor))))))
+           (virtual-thread-executor-service))))
 
 (defonce
   ^{:doc "A global, virtual thread per task scheduled executor service."
     :no-doc true}
   default-vthread-scheduled-executor
   (delay (when vthreads-supported?
-           (eval '(-> (virtual-thread-factory "scheduled-dispatch-virtual-thread-")
-                      (Executors/newSingleThreadScheduledExecutor))))))
+           (virtual-thread-executor-service))))
 
-(defonce ^:dynamic *executor*
+(defonce
+  ^:dynamic *executor*
   (if vthreads-supported?
     (maybe-deref default-vthread-executor)
     (ForkJoinPool/commonPool)))
 
-(defonce ^:dynamic *timeout-executor*
+(defonce
+  ^:dynamic *timeout-executor*
   (if vthreads-supported?
     (maybe-deref default-vthread-scheduled-executor)
     (Executors/newSingleThreadScheduledExecutor)))
