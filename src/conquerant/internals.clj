@@ -1,13 +1,75 @@
 (ns conquerant.internals
   (:require [clojure.stacktrace :as st])
-  (:import [java.util.concurrent CompletableFuture CompletionStage Executor Executors ForkJoinPool ScheduledExecutorService TimeUnit]
+  (:import [java.lang.reflect Method]
+           [java.util.concurrent CompletableFuture CompletionStage Executor ExecutorService Executors ForkJoinPool ScheduledExecutorService ThreadFactory TimeUnit]
            java.util.function.Function))
 
-(defonce ^:dynamic *executor*
-  (ForkJoinPool/commonPool))
+(defn- has-method?
+  "Checks if a class has certain method"
+  [klass name]
+  (let [methods (into #{}
+                      (map (fn [method] (.getName ^Method method)))
+                      (.getDeclaredMethods ^Class klass))]
+    (contains? methods name)))
 
-(defonce ^:dynamic *timeout-executor*
-  (Executors/newSingleThreadScheduledExecutor))
+(defn- maybe-deref
+  "Derefs a delay object else returns object itself"
+  [o]
+  (if (delay? o)
+    (deref o)
+    o))
+
+(defn- virtual-thread-executor-service
+  "This should be changed to standard Java Executors and Thread class interop when the library only support JDK 19 +.
+  Currently, this is implemented using reflect library to enable Native image build on Graal
+  clojure fn eval breaks Graal native images due to Dynamic class loading"
+  ^ExecutorService
+  []
+  (let [^Method new-thread-per-task-executor-method (.getDeclaredMethod Executors "newVirtualThreadPerTaskExecutor" (make-array Class 0))]
+    (.invoke ^Method new-thread-per-task-executor-method nil (make-array Object 0))))
+
+(def vthreads-supported?
+  "A var that indicates if virtual threads are supported or not in the current runtime.
+  This should be changed to standard Java Thread class interop when the library only support JDK 19 +.
+  Currently, this is implemented using reflection to enable Native image build on Graal
+  clojure fn eval breaks Graal native images due to Dynamic class loading"
+  (and (has-method? Thread "startVirtualThread")
+       (has-method? Thread "ofVirtual")
+       (has-method? Executors "newVirtualThreadPerTaskExecutor")
+       (try
+         (.invoke
+           (.getDeclaredMethod Thread "ofVirtual" (make-array Class 0))
+           nil
+           (make-array Object 0))
+         true
+         (catch Exception ex
+           false))))
+
+(defonce
+  ^{:doc "A global, virtual thread per task executor service."
+    :no-doc true}
+  default-vthread-executor
+  (delay (when vthreads-supported?
+           (virtual-thread-executor-service))))
+
+(defonce
+  ^{:doc "A global, virtual thread per task scheduled executor service."
+    :no-doc true}
+  default-vthread-scheduled-executor
+  (delay (when vthreads-supported?
+           (virtual-thread-executor-service))))
+
+(defonce
+  ^:dynamic *executor*
+  (if vthreads-supported?
+    (maybe-deref default-vthread-executor)
+    (ForkJoinPool/commonPool)))
+
+(defonce
+  ^:dynamic *timeout-executor*
+  (if vthreads-supported?
+    (maybe-deref default-vthread-scheduled-executor)
+    (Executors/newSingleThreadScheduledExecutor)))
 
 (defn complete [^CompletableFuture promise val]
   (.complete promise val))
